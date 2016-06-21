@@ -151,6 +151,10 @@ public abstract class Cursor {
         cursorTheme = theme;
         audioManager.loadTheme(cursorTheme);
         theme.load(cursorSceneObject);
+        if(scene != null) {
+            scene.bindShaders(cursorSceneObject.getMainSceneObject());
+            //scene.bindShaders();
+        }
         if (currentCursorAsset != null) {
             currentCursorAsset = cursorTheme.getAsset(currentCursorAsset.getAction());
             if (currentCursorAsset == null) {

@@ -23,6 +23,7 @@ import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.ZipLoader;
 import org.gearvrf.animation.GVRAnimation;
@@ -74,13 +75,13 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         int key = sceneObject.getId();
         GVRImageFrameAnimation animation = animations.get(key);
         if (animation == null) {
-            GVRRenderData renderData = renderDataArray.get(key);
+            GVRSceneObject renderData = renderDataArray.get(key);
             if (renderData == null) {
                 Log.e(TAG, "Render data not found, should not happen");
                 return;
             }
-
-            GVRMaterial loadingMaterial = renderData.getMaterial();
+            GVRRenderData renderData1 = renderData.getRenderData();
+            GVRMaterial loadingMaterial = renderData1.getMaterial();
             loadingMaterial.setMainTexture(loaderTextures.get(0));
             animation = new GVRImageFrameAnimation(loadingMaterial,
                     animationDuration, loaderTextures);

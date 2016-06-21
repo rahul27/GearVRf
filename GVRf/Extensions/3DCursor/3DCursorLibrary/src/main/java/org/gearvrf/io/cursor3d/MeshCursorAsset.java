@@ -43,7 +43,8 @@ class MeshCursorAsset extends CursorAsset {
     private String texture;
     private float x;
     private float y;
-    protected SparseArray<GVRRenderData> renderDataArray;
+    //protected SparseArray<GVRRenderData> renderDataArray;
+    protected SparseArray<GVRSceneObject> renderDataArray;
 
     MeshCursorAsset(GVRContext context, CursorType type, Action action, String texture) {
         this(context, type, action, null, texture);
@@ -52,7 +53,7 @@ class MeshCursorAsset extends CursorAsset {
     MeshCursorAsset(GVRContext context, CursorType type, Action action, String mesh, String
             texture) {
         super(context, type, action);
-        renderDataArray = new SparseArray<GVRRenderData>();
+        renderDataArray = new SparseArray<GVRSceneObject>();
 
         if (mesh != null) {
             try {
@@ -99,19 +100,21 @@ class MeshCursorAsset extends CursorAsset {
             }
         }
         int key = sceneObject.getId();
-        GVRRenderData renderData = renderDataArray.get(key);
+        GVRSceneObject child = renderDataArray.get(key);
 
-        if (renderData == null) {
-            renderData = new GVRRenderData(context);
+        if (child == null) {
+            child = new GVRSceneObject(context);
+            GVRRenderData renderData = new GVRRenderData(context);
             renderData.setMaterial(new GVRMaterial(context, Texture.ID));
 
             if (cursorType == CursorType.LASER) {
                 renderData.setDepthTest(false);
                 renderData.setRenderingOrder(OVERLAY_RENDER_ORDER);
             }
-            renderDataArray.append(key, renderData);
+            child.attachRenderData(renderData);
+            renderDataArray.append(key, child);
         }
-
+        GVRRenderData renderData = child.getRenderData();
         if (mesh != null) {
             renderData.setMesh(mesh);
         } else if (futureMesh != null) {
@@ -121,34 +124,42 @@ class MeshCursorAsset extends CursorAsset {
         if (futureTexture != null) {
             renderData.getMaterial().setMainTexture(futureTexture);
         }
+        child.setEnable(false);
+        sceneObject.addChildObject(child);
     }
 
     @Override
     void unload(CursorSceneObject sceneObject) {
         //clear the reference to the texture
-        renderDataArray.remove(sceneObject.getId());
+        GVRSceneObject sceneObject1 = renderDataArray.get(sceneObject.getId());
 
         //check if there are cursors still using the texture
-        if (renderDataArray.size() == 0) {
+        if (renderDataArray.size() == 1) {
             futureTexture = null;
         }
+
+        sceneObject.removeChildObject(sceneObject1);
+        renderDataArray.remove(sceneObject.getId());
+
     }
 
     void set(final CursorSceneObject sceneObject) {
         super.set(sceneObject);
-        final GVRRenderData renderData = renderDataArray.get(sceneObject.getId());
+        final GVRSceneObject renderData = renderDataArray.get(sceneObject.getId());
         if (renderData == null) {
             Log.e(TAG, "Render data not found, should not happen");
             return;
         }
+        sceneObject.set(renderData);
+        renderData.setEnable(true);
 
         // this call can only be made on the GL Thread
-        context.runOnGlThread(new Runnable() {
+        /*context.runOnGlThread(new Runnable() {
             @Override
             public void run() {
                 sceneObject.attachRenderData(renderData);
             }
-        });
+        });*/
 
     }
 
@@ -160,14 +171,18 @@ class MeshCursorAsset extends CursorAsset {
 
     void reset(final CursorSceneObject sceneObject) {
         super.reset(sceneObject);
-        
+        final GVRSceneObject renderData = renderDataArray.get(sceneObject.getId());
+        sceneObject.reset();
+        renderData.setEnable(false);
+
+        //sceneObject.removeChildObject(renderData);
         // this call can only be made on the GL Thread
-        context.runOnGlThread(new Runnable() {
+        /*context.runOnGlThread(new Runnable() {
             @Override
             public void run() {
                 sceneObject.detachRenderData();
             }
-        });
+        });*/
 
     }
 

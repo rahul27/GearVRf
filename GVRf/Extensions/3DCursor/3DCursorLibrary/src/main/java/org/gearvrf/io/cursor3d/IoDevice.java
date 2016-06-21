@@ -249,7 +249,7 @@ public class IoDevice {
      * @param y y value of the position
      * @param z z value of the position
      */
-    protected void setPosition(float x, float y, float z) {
+    protected void  setPosition(float x, float y, float z) {
         gvrCursorController.setPosition(x, y, z);
     }
 
@@ -266,6 +266,13 @@ public class IoDevice {
         GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
         if (sceneObject != null) {
             sceneObject.getTransform().setRotation(w, x, y, z);
+        }
+    }
+
+    protected void setVisible(boolean value) {
+        GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
+        if (sceneObject != null && sceneObject.isEnabled() != value) {
+            sceneObject.setEnable(value);
         }
     }
 

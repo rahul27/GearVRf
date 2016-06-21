@@ -53,12 +53,12 @@ class ObjectCursor extends Cursor {
     @Override
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
-        if (intersecting.contains(object)) {
-            createAndSendCursorEvent(event.getObject(), true, event.getHitPoint(), true, active,
-                    event.getCursorController().getKeyEvent());
+        if (object != null && isColliding(object) && event.isOver()) {
+            createAndSendCursorEvent(event.getObject(), true, event.getHitPoint(), true,
+                    event.isActive(),event.getCursorController().getKeyEvent());
         } else {
             createAndSendCursorEvent(event.getObject(), false, event.getHitPoint(), event.isOver
-                    (), active, event.getCursorController().getKeyEvent());
+                    (), event.isActive(), event.getCursorController().getKeyEvent());
         }
     }
 
@@ -73,7 +73,7 @@ class ObjectCursor extends Cursor {
         cursorEvent.setCursor(this);
         cursorEvent.setKeyEvent(keyEvent);
 
-        if (intersecting.isEmpty() == false) {
+        if (colliding) {
             if (isActive) {
                 checkAndSetAsset(Action.CLICK);
             } else {
@@ -105,7 +105,7 @@ class ObjectCursor extends Cursor {
 
             lookAt();
 
-            KeyEvent keyEvent = controller.getKeyEvent();
+            /*KeyEvent keyEvent = controller.getKeyEvent();
             if (keyEvent != null) {
                 active = (keyEvent.getAction() == KeyEvent.ACTION_DOWN);
             }
@@ -126,7 +126,7 @@ class ObjectCursor extends Cursor {
                 createAndSendCursorEvent(object, false, EMPTY_HIT_POINT, false, active, keyEvent);
             }
             previousHits.clear();
-            previousHits.addAll(newHits);
+            previousHits.addAll(newHits);*/
         }
     };
 

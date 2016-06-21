@@ -129,8 +129,16 @@ class CursorSceneObject {
     }
 
     void addChildObject(GVRSceneObject sceneObject) {
-        meshSceneObject = getMeshObject(sceneObject);
+
         cursor.addChildObject(sceneObject);
+    }
+
+    void set(GVRSceneObject sceneObject){
+        meshSceneObject = getMeshObject(sceneObject);
+    }
+
+    void reset(){
+        meshSceneObject = null;
     }
 
     void removeExternalChildObject(GVRSceneObject sceneObject) {
@@ -138,7 +146,7 @@ class CursorSceneObject {
     }
 
     void removeChildObject(GVRSceneObject sceneObject) {
-        meshSceneObject = cursor;
+        //meshSceneObject = cursor;
         cursor.removeChildObject(sceneObject);
     }
 

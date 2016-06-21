@@ -689,6 +689,7 @@ public class CursorManager {
         }
         object.setSensor(cursorSensor);
         object.getEventReceiver().addListener(cursorSensor);
+        //cursorSensor.eventsListener = cursorSensor;
         return true;
     }
 

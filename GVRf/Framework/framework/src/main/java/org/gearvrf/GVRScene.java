@@ -409,7 +409,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRShaderTemplate
      * @see GVRScene.addSceneObject
      */
-    protected void bindShaders(GVRSceneObject root) {
+    public void bindShaders(GVRSceneObject root) {
         ArrayList<GVRLightBase> lights = root.getAllComponents(GVRLightBase.getComponentType());
         int added = 0;
         for (GVRLightBase light : lights) {
