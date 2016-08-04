@@ -475,6 +475,7 @@ public class CursorManager {
     /**
      * This method modifies the {@link Cursor} passed in the argument to a settings cursor. A
      * settings cursor is a {@link Cursor} of type {@link CursorType#LASER} used to interact with a
+
      * {@link GVRViewSceneObject}. Since it is easier to use a {@link Cursor} of type
      * {@link CursorType#LASER} to interract with {@link GVRViewSceneObject} this convinience
      * method is provided, so that the applications which do not use a {@link Cursor} of type
@@ -483,14 +484,15 @@ public class CursorManager {
      *
      * @param cursor The {@link Cursor} whose {@link IoDevice} will be used for the settings
      *               cursor.
+
      */
     public void enableSettingsCursor(Cursor cursor) {
-        menuCursor = cursor;
         IoDevice device = cursor.getIoDevice();
         settingsIoDeviceFarDepth = device.getFarDepth();
         settingsIoDeviceNearDepth = device.getNearDepth();
+        cursor.destroyIoDevice(device);
         scene.removeSceneObject(cursor.getMainSceneObject());
-        settingsCursor.transferIoDevice(cursor);
+        settingsCursor.setIoDevice(device);
         scene.addSceneObject(settingsCursor.getMainSceneObject());
     }
 
@@ -502,16 +504,17 @@ public class CursorManager {
      * longer needed.
      */
     public void disableSettingsCursor() {
-        if(menuCursor != null) {
-            scene.removeSceneObject(settingsCursor.getMainSceneObject());
-            menuCursor.transferIoDevice(settingsCursor);
-            settingsCursor.ioDevice = null; // clear IoDevice of the settings cursor.
-            scene.addSceneObject(menuCursor.getMainSceneObject());
-            IoDevice device = menuCursor.ioDevice;
-            device.setFarDepth(settingsIoDeviceFarDepth);
-            device.setNearDepth(settingsIoDeviceNearDepth);
-            scene.addSceneObject(menuCursor.getMainSceneObject());
-            menuCursor = null;
+        for (Cursor cursor : cursors) {
+            if (cursor.getIoDevice() == settingsCursor.getIoDevice()) {
+                IoDevice device = cursor.getIoDevice();
+                settingsCursor.resetIoDevice(device);
+                scene.removeSceneObject(settingsCursor.getMainSceneObject());
+                cursor.setIoDevice(device);
+                device.setFarDepth(settingsIoDeviceFarDepth);
+                device.setNearDepth(settingsIoDeviceNearDepth);
+                scene.addSceneObject(cursor.getMainSceneObject());
+                break;
+            }
         }
     }
 
@@ -1082,10 +1085,14 @@ public class CursorManager {
         @Override
         public void onEvent(CursorEvent event) {
             GVRSceneObject sceneObject = event.getObject();
-            while (sceneObject != null && !callEventHandler(sceneObject, event) && sceneObject
+
+/*            while (sceneObject != null && !callEventHandler(sceneObject, event) && sceneObject
                     .getParent() != null) {
                 sceneObject = sceneObject.getParent();
             }
+*/
+            callEventHandler(sceneObject, event);
+
         }
     };
 

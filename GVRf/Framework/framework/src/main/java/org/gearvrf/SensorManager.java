@@ -45,10 +45,13 @@ class SensorManager {
 
     private SensorManager() {
         sensors = new ConcurrentHashMap<GVRBaseSensor, Integer>();
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         // Create a readback buffer and forward it to the native layer
         readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
         readbackBufferB.order(ByteOrder.nativeOrder());
         readbackBuffer = readbackBufferB.asFloatBuffer();
+=======
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
     }
 
     static SensorManager getInstance(){

@@ -61,7 +61,10 @@ class GVRGazeCursorController extends GVRBaseController implements
         gazePosition = new Vector3f();
         setPosition = new Vector3f();
         thread = new EventHandlerThread();
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         isEnabled = isEnabled();
+=======
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
     }
 
     /*
@@ -70,6 +73,7 @@ class GVRGazeCursorController extends GVRBaseController implements
      */
     void incrementReferenceCount() {
         referenceCount++;
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         if (referenceCount == 1 && isEnabled) {
             start();
         }
@@ -91,6 +95,15 @@ class GVRGazeCursorController extends GVRBaseController implements
             thread.quitSafely();
             thread = new EventHandlerThread();
             threadStarted = false;
+=======
+        if (referenceCount == 1) {
+            if(!threadStarted) {
+                thread.start();
+                thread.prepareHandler();
+            }
+            context.registerDrawFrameListener(this);
+
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         }
     }
 
@@ -101,16 +114,29 @@ class GVRGazeCursorController extends GVRBaseController implements
     void decrementReferenceCount() {
         referenceCount--;
         // no more devices
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         if (referenceCount == 0 && isEnabled) {
            stop();
+=======
+        if (referenceCount == 0) {
+            context.unregisterDrawFrameListener(this);
+            if(threadStarted) {
+                thread.quitSafely();
+                thread = new EventHandlerThread();
+                threadStarted = false;
+            }
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         }
     }
 
     @Override
     boolean dispatchKeyEvent(KeyEvent event) {
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         if(!threadStarted){
             return false;
         }
+=======
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         thread.dispatchKeyEvent(event);
         return true;
     }
@@ -189,16 +215,30 @@ class GVRGazeCursorController extends GVRBaseController implements
     @Override
     public void setPosition(float x, float y, float z) {
         setPosition.set(x, y, z);
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         thread.setPosition(x, y, z);
+=======
+        thread.setPosition(x,y,z);
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
     }
 
     @Override
     public void onDrawFrame(float frameTime) {
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         synchronized (lock) {
             setPosition.mulPosition(context.getMainScene().getMainCameraRig()
                     .getHeadTransform().getModelMatrix4f(), gazePosition);
         }
         thread.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
+=======
+        if(isEnabled()) {
+            synchronized (lock) {
+                setPosition.mulPoint(context.getMainScene().getMainCameraRig()
+                        .getHeadTransform().getModelMatrix4f(), gazePosition);
+            }
+            thread.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
+        }
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
     }
 
     void close() {
@@ -207,7 +247,11 @@ class GVRGazeCursorController extends GVRBaseController implements
             context.unregisterDrawFrameListener(this);
         }
         referenceCount = 0;
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         if (threadStarted) {
+=======
+        if(threadStarted) {
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
             thread.quitSafely();
         }
     }
@@ -218,20 +262,28 @@ class GVRGazeCursorController extends GVRBaseController implements
         public static final int SET_KEY_EVENT = 1;
         public static final int SET_KEY_DOWN = 2;
         public static final int SET_KEY_UP = 3;
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         public static final int SET_ENABLE = 4;
         public static final int ENABLE = 0;
         public static final int DISABLE = 1;
 
+=======
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(
                 KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
         private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP,
                 KeyEvent.KEYCODE_BUTTON_1);
         private Handler gazeEventHandler;
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
         private final Vector3f position;
 
         public EventHandlerThread() {
             super(THREAD_NAME);
             position = new Vector3f();
+=======
+        public EventHandlerThread() {
+            super(THREAD_NAME);
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         }
 
         public void prepareHandler() {
@@ -240,6 +292,7 @@ class GVRGazeCursorController extends GVRBaseController implements
                 public boolean handleMessage(Message msg) {
                     switch (msg.what) {
                         case SET_POSITION:
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
                             float x, y, z;
                             synchronized (position) {
                                 x = position.x;
@@ -247,6 +300,11 @@ class GVRGazeCursorController extends GVRBaseController implements
                                 z = position.z;
                             }
                             GVRGazeCursorController.super.setPosition(x, y, z);
+=======
+                            float[] position = (float[])msg.obj;
+                            GVRGazeCursorController.super.setPosition(position[0],position[1],
+                                    position[2]);
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
                             break;
                         case SET_KEY_DOWN:
                             buttonDownSent = true;
@@ -256,12 +314,18 @@ class GVRGazeCursorController extends GVRBaseController implements
                             setKeyEvent(BUTTON_GAZE_UP);
                             break;
                         case SET_KEY_EVENT:
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
                             KeyEvent keyEvent = (KeyEvent) msg.obj;
                             setKeyEvent(keyEvent);
                             break;
                         case SET_ENABLE:
                             GVRGazeCursorController.super.setEnable(msg.arg1 == ENABLE);
                             break;
+=======
+                            KeyEvent keyEvent = (KeyEvent)msg.obj;
+                            setKeyEvent(keyEvent);
+                            break;
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
                     }
                     return false;
                 }
@@ -269,6 +333,7 @@ class GVRGazeCursorController extends GVRBaseController implements
         }
 
         public void setPosition(float x, float y, float z) {
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
             synchronized (position) {
                 position.x = x;
                 position.y = y;
@@ -276,10 +341,14 @@ class GVRGazeCursorController extends GVRBaseController implements
             }
             Message msg = Message.obtain(gazeEventHandler, SET_POSITION, position);
             gazeEventHandler.removeMessages(SET_POSITION);
+=======
+            Message msg = Message.obtain(gazeEventHandler,SET_POSITION,new float[]{x,y,z});
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
             msg.sendToTarget();
         }
 
         public void dispatchKeyEvent(KeyEvent keyEvent) {
+<<<<<<< 4fe311926f5a829bbd2a92a985a718a6bc03ba89
             Message msg = Message.obtain(gazeEventHandler, SET_KEY_EVENT, keyEvent);
             msg.sendToTarget();
         }
@@ -290,6 +359,11 @@ class GVRGazeCursorController extends GVRBaseController implements
             msg.sendToTarget();
         }
 
+=======
+            Message msg = Message.obtain(gazeEventHandler,SET_KEY_EVENT,keyEvent);
+            msg.sendToTarget();
+        }
+>>>>>>> Fixes for 3DCursorLibrary and org.gearvrf.io
         public Handler getGazeEventHandler() {
             return gazeEventHandler;
         }
