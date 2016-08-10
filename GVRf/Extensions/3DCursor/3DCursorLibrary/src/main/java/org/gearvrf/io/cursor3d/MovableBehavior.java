@@ -2,7 +2,6 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -13,8 +12,8 @@ import org.joml.Vector3f;
  */
 public class MovableBehavior extends SelectableBehavior {
     public static final String TAG = MovableBehavior.class.getSimpleName();
-    static private long TYPE_MOVABLE = ((long)MovableBehavior.class.hashCode() << 32) & (System
-            .currentTimeMillis() & 0xffffffff);;
+    static private long TYPE_MOVABLE = ((long) MovableBehavior.class.hashCode() << 32) & (System
+            .currentTimeMillis() & 0xffffffff);
     private Vector3f prevCursorPosition;
     private Quaternionf rotation;
     private Vector3f cross;
@@ -106,7 +105,8 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickEvent(CursorEvent event) {
-       synchronized (selectedLock) {
+        super.handleClickEvent(event);
+        synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor
                 return;
@@ -133,6 +133,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleDragEvent(CursorEvent event) {
+        super.handleDragEvent(event);
         if (cursor.getCursorType() == CursorType.LASER && cursor == event.getCursor()) {
             Cursor cursor = event.getCursor();
             Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor.getPositionY
@@ -144,6 +145,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleCursorLeave(CursorEvent event) {
+        super.handleCursorLeave(event);
         if (event.isActive() && cursor == event.getCursor()) {
             if (cursor.getCursorType() == CursorType.LASER) {
                 Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor
@@ -158,6 +160,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickReleased(CursorEvent event) {
+        super.handleClickReleased(event);
         synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor

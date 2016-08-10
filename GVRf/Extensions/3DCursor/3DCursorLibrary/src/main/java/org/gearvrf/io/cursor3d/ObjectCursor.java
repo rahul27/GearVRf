@@ -24,8 +24,10 @@ import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSceneObject.BoundingVolume;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
+import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -137,14 +139,10 @@ class ObjectCursor extends Cursor {
 
         if (objectSensor != null && objectSensor.isEnabled()) {
             if (object.hasMesh()) {
-                GVRMesh mesh = object.getRenderData().getMesh().getBoundingBox();
                 Matrix4f matrix4f = object.getTransform().getModelMatrix4f();
-                float[] vertices = mesh.getVertices();
-                int length = vertices.length;
-
-                Vector3f cubeMin = new Vector3f(vertices[0], vertices[1], vertices[2]);
-                Vector3f cubeMax = new Vector3f(vertices[length - 3], vertices[length - 2],
-                        vertices[length - 1]);
+                BoundingVolume volume = object.getBoundingVolume();
+                Vector3f cubeMin = volume.minCorner;
+                Vector3f cubeMax = volume.maxCorner;
                 cubeMin.mulPoint(matrix4f);
                 cubeMax.mulPoint(matrix4f);
 
