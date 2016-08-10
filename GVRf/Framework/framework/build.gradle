@@ -223,8 +223,7 @@ assembleDebug {}.doLast {
     task copyAARFiles(type: Copy) {
         if (rootProject.hasProperty("LIBS_DIRECTORY")) {
             println "copying aar files to the libs_directory"
-            def libsdirPath = projectDir.absolutePath + '/../../../' +
-                    rootProject.property("LIBS_DIRECTORY")
+            def libsdirPath = rootProject.property("LIBS_DIRECTORY")
             def libsDir = new File(libsdirPath);
             if (libsDir.exists()) {
                 from 'build/outputs/aar'
