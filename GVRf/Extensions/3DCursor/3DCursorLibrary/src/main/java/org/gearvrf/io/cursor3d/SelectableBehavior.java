@@ -54,6 +54,8 @@ public class SelectableBehavior extends GVRBehavior {
          */
         void onStateChanged(SelectableBehavior behavior, ObjectState prev, ObjectState current,
                             Cursor cursor);
+
+        void onCursorEvent(CursorEvent cursorEvent);
     }
 
     /**
@@ -307,7 +309,6 @@ public class SelectableBehavior extends GVRBehavior {
         boolean isColliding = event.isColliding();
         int cursorId = event.getCursor().getId();
         KeyEvent keyEvent = event.getKeyEvent();
-
         ObjectState state = states.get(cursorId);
         if (state == null) {
             return;
@@ -411,6 +412,9 @@ public class SelectableBehavior extends GVRBehavior {
         }
         previousOver = event.isOver();
         previousActive = event.isActive();
+        if(stateChangedListener != null) {
+            stateChangedListener.onCursorEvent(event);
+        }
     }
 
     private float prevDistance = 0;
