@@ -145,19 +145,19 @@ class ObjectCursor extends Cursor {
                 Vector3f cubeMax = volume.maxCorner;
                 cubeMin.mulPoint(matrix4f);
                 cubeMax.mulPoint(matrix4f);
+                Vector3f objectPosition = new Vector3f(object.getTransform().getPositionX(),
+                        object.getTransform().getPositionY(),object.getTransform().getPositionZ());
+                objectPosition.mulPoint(matrix4f);
 
                 if (!pointInBox(cursorSceneObject.getPositionX(), cursorSceneObject.getPositionY(),
                         cursorSceneObject.getPositionZ(), cubeMin, cubeMax)) {
                     if (isColliding(object)) {
                         addNewHit(object);
-//                        float[] hitpoint = new float[3];
-//                        hitpoint[0] = object.getTransform().getPositionX() - cursorSceneObject
-//                                .getPositionX();
-//                        hitpoint[1] = object.getTransform().getPositionY() - cursorSceneObject
-//                                .getPositionY();
-//                        hitpoint[2] = object.getTransform().getPositionZ() - cursorSceneObject
-//                                .getPositionZ();
-//                        createAndSendCursorEvent(object, true, hitpoint, true, active, keyEvent);
+                        float[] hitpoint = new float[3];
+                        hitpoint[0] = cursorSceneObject.getPositionX() - objectPosition.x;
+                        hitpoint[1] = cursorSceneObject.getPositionY() - objectPosition.y;
+                        hitpoint[2] = cursorSceneObject.getPositionZ() - objectPosition.z;
+                        createAndSendCursorEvent(object, true, hitpoint, true, active, keyEvent);
                     }
                 } else {
                     addNewHit(object);
