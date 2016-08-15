@@ -150,8 +150,14 @@ class ObjectCursor extends Cursor {
                         cursorSceneObject.getPositionZ(), cubeMin, cubeMax)) {
                     if (isColliding(object)) {
                         addNewHit(object);
-                        createAndSendCursorEvent(object, true, new float[3], true, active,
-                                keyEvent);
+//                        float[] hitpoint = new float[3];
+//                        hitpoint[0] = object.getTransform().getPositionX() - cursorSceneObject
+//                                .getPositionX();
+//                        hitpoint[1] = object.getTransform().getPositionY() - cursorSceneObject
+//                                .getPositionY();
+//                        hitpoint[2] = object.getTransform().getPositionZ() - cursorSceneObject
+//                                .getPositionZ();
+//                        createAndSendCursorEvent(object, true, hitpoint, true, active, keyEvent);
                     }
                 } else {
                     addNewHit(object);
