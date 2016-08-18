@@ -103,7 +103,7 @@ class SensorManager {
 
                 if (hitPoint != null) {
                     objectSensor.addSceneObject(controller, object, hitPoint);
-
+                    //Log.d("rahul", "Got it");
                     // if we are doing an active search and we find one.
                     if (markActiveNodes) {
                         objectSensor.setActive(controller, true);

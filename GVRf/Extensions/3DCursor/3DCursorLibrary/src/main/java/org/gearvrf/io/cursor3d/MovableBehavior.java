@@ -1,5 +1,7 @@
 package org.gearvrf.io.cursor3d;
 
+import android.util.Log;
+
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
@@ -110,6 +112,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickEvent(CursorEvent event) {
+        Log.d("rahul", "handleClickEvent");
         super.handleClickEvent(event);
         synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
@@ -163,6 +166,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleCursorLeave(CursorEvent event) {
+        Log.d("rahul", "handleCursorLeave");
         super.handleCursorLeave(event);
         if (event.isActive() && cursor == event.getCursor()) {
             if (cursor.getCursorType() == CursorType.LASER) {
@@ -180,10 +184,14 @@ public class MovableBehavior extends SelectableBehavior {
     void handleClickReleased(CursorEvent event) {
         super.handleClickReleased(event);
         synchronized (selectedLock) {
-            if (selected != null && cursor != event.getCursor()) {
+            if (selected != null && cursor != event.getCursor() ) {
                 // We have a selected object but not the correct cursor
                 return;
             }
+
+            //if(selected != event.getObject()){
+            //    return;
+            //}
 
             if (selected != null && cursor.getCursorType() == CursorType.OBJECT) {
 

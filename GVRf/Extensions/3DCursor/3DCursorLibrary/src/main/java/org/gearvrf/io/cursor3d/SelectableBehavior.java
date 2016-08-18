@@ -300,7 +300,10 @@ public class SelectableBehavior extends GVRBehavior {
     }
 
     void handleCursorEvent(CursorEvent event) {
+
         Cursor cursor = event.getCursor();
+        Log.d("rahul", "event " + event.isActive() + " " + event.isOver() + " " + event
+                .isColliding() + " " + cursor.getId()+ " get " + getOwnerObject().getName());
         float cursorDistance = getDistance(cursor.getPositionX(), cursor.getPositionY(), cursor
                 .getPositionZ());
         float soDistance = getDistance(getOwnerObject());
