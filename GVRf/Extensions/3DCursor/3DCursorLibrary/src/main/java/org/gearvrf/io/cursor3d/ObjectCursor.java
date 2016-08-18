@@ -24,11 +24,8 @@ import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRSceneObject.BoundingVolume;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
-import org.gearvrf.scene_objects.GVRCubeSceneObject;
-import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -45,22 +42,38 @@ class ObjectCursor extends Cursor {
     private Set<GVRSceneObject> previousHits;
     private List<GVRSceneObject> newHits;
     private boolean active;
+    private Matrix4f matrix4f;
+    private Vector3f cubeMin, cubeMax, objectPosition;
+    private float[] hitpoint;
 
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
         super(context, CursorType.OBJECT, cursorManager);
         intersecting = new HashSet<GVRSceneObject>();
         previousHits = new HashSet<GVRSceneObject>();
         newHits = new ArrayList<GVRSceneObject>();
+        matrix4f = new Matrix4f();
+        cubeMin = new Vector3f();
+        cubeMax = new Vector3f();
+        objectPosition = new Vector3f();
+        hitpoint = new float[3];
     }
 
     @Override
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
+
+        SelectableGroup selectableBehavior = (SelectableGroup) object.getComponent
+                (SelectableGroup.getComponentType());
+
+        if (selectableBehavior != null) {
+            object = selectableBehavior.getParent();
+        }
+
         if (intersecting.contains(object)) {
-            createAndSendCursorEvent(event.getObject(), true, event.getHitPoint(), true, active,
+            createAndSendCursorEvent(object, true, event.getHitPoint(), true, active,
                     event.getCursorController().getKeyEvent());
         } else {
-            createAndSendCursorEvent(event.getObject(), false, event.getHitPoint(), event.isOver
+            createAndSendCursorEvent(object, false, event.getHitPoint(), event.isOver
                     (), active, event.getCursorController().getKeyEvent());
         }
     }
@@ -139,28 +152,38 @@ class ObjectCursor extends Cursor {
 
         if (objectSensor != null && objectSensor.isEnabled()) {
             if (object.hasMesh()) {
-                Matrix4f matrix4f = object.getTransform().getModelMatrix4f();
-                BoundingVolume volume = object.getBoundingVolume();
-                Vector3f cubeMin = volume.minCorner;
-                Vector3f cubeMax = volume.maxCorner;
+                matrix4f.set(object.getTransform().getModelMatrix());
+                GVRMesh mesh = object.getRenderData().getMesh().getBoundingBox();
+                float[] vertices = mesh.getVertices();
+                int length = vertices.length;
+                cubeMin.set(vertices[0], vertices[1], vertices[2]);
+                cubeMax.set(vertices[length - 3], vertices[length - 2], vertices[length - 1]);
                 cubeMin.mulPoint(matrix4f);
                 cubeMax.mulPoint(matrix4f);
-                Vector3f objectPosition = new Vector3f(object.getTransform().getPositionX(),
-                        object.getTransform().getPositionY(),object.getTransform().getPositionZ());
+                objectPosition.set(object.getTransform().getPositionX(),
+                        object.getTransform().getPositionY(), object.getTransform().getPositionZ());
                 objectPosition.mulPoint(matrix4f);
+
+                SelectableGroup selectableBehavior = (SelectableGroup) object.getComponent
+                        (SelectableGroup.getComponentType());
+
+                GVRSceneObject sobject = object;
+                if (selectableBehavior != null) {
+                    sobject = selectableBehavior.getParent();
+                }
 
                 if (!pointInBox(cursorSceneObject.getPositionX(), cursorSceneObject.getPositionY(),
                         cursorSceneObject.getPositionZ(), cubeMin, cubeMax)) {
                     if (isColliding(object)) {
-                        addNewHit(object);
-                        float[] hitpoint = new float[3];
+                        addNewHit(sobject);
                         hitpoint[0] = cursorSceneObject.getPositionX() - objectPosition.x;
                         hitpoint[1] = cursorSceneObject.getPositionY() - objectPosition.y;
                         hitpoint[2] = cursorSceneObject.getPositionZ() - objectPosition.z;
-                        createAndSendCursorEvent(object, true, hitpoint, true, active, keyEvent);
+                        createAndSendCursorEvent(sobject, true,
+                                hitpoint, true, active, keyEvent);
                     }
                 } else {
-                    addNewHit(object);
+                    addNewHit(sobject);
                 }
             }
         }
@@ -171,6 +194,7 @@ class ObjectCursor extends Cursor {
     }
 
     private void addNewHit(GVRSceneObject object) {
+
         if (previousHits.contains(object)) {
             previousHits.remove(object);
         }

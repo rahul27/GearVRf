@@ -1010,9 +1010,7 @@ public class CursorManager {
         @Override
         public void onEvent(CursorEvent event) {
             GVRSceneObject sceneObject = event.getObject();
-            while (!callEventHandler(sceneObject, event) && sceneObject.getParent() != null) {
-                sceneObject = sceneObject.getParent();
-            }
+            callEventHandler(sceneObject, event);
         }
     };
 

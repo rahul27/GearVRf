@@ -8,7 +8,6 @@ import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -196,6 +195,17 @@ public class SelectableBehavior extends GVRBehavior {
             }
         }
         cursorManager.addSelectableObject(sceneObject);
+        SelectableGroup component = new SelectableGroup(getGVRContext(), sceneObject);
+        setSelectableGroup(sceneObject, component);
+    }
+
+    private void setSelectableGroup(GVRSceneObject sceneObject, SelectableGroup component){
+        if(sceneObject != null){
+            sceneObject.attachComponent(component);
+            for(GVRSceneObject child: sceneObject.getChildren()){
+                setSelectableGroup(child, component);
+            }
+        }
     }
 
     @Override
@@ -203,6 +213,16 @@ public class SelectableBehavior extends GVRBehavior {
         super.onDetach(sceneObject);
         sceneObject.detachComponent(GVRSwitch.getComponentType());
         cursorManager.removeSelectableObject(sceneObject);
+        resetSelectableGroup(sceneObject);
+    }
+
+    private void resetSelectableGroup(GVRSceneObject sceneObject){
+        if(sceneObject != null){
+            sceneObject.detachComponent(SelectableGroup.getComponentType());
+            for(GVRSceneObject child: sceneObject.getChildren()){
+                resetSelectableGroup(child);
+            }
+        }
     }
 
     /**

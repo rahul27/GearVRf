@@ -30,6 +30,7 @@ public class MovableBehavior extends SelectableBehavior {
     private static final Quaternionf selectedRotation = new Quaternionf();
     private static final Vector3f selectedPosition = new Vector3f();
     private static final Matrix4f cursorModelMatrix = new Matrix4f();
+    private static final Matrix4f selectedModelMatrix = new Matrix4f();
 
     /**
      * Creates a {@link MovableBehavior} to be attached to any {@link GVRSceneObject}. The
@@ -122,13 +123,14 @@ public class MovableBehavior extends SelectableBehavior {
             prevCursorPosition.set(cursor.getPositionX(), cursor.getPositionY(), cursor
                     .getPositionZ());
             selected = getOwnerObject();
+
             if (cursor.getCursorType() == CursorType.OBJECT) {
                 ownerParent = selected.getParent();
-
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
                 cursorModelMatrix.invert();
-                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedTransform.getModelMatrix4f()));
+                selectedModelMatrix.set(selectedTransform.getModelMatrix());
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
                 ownerParent.removeChildObject(selected);
                 cursorSceneObject.addChildObject(selected);
             }
@@ -172,12 +174,12 @@ public class MovableBehavior extends SelectableBehavior {
             }
 
             if (selected != null && cursor.getCursorType() == CursorType.OBJECT) {
-
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
                 cursorSceneObject.removeChildObject(selected);
                 ownerParent.addChildObject(selected);
-                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedTransform.getModelMatrix4f()));
+                selectedModelMatrix.set(selectedTransform.getModelMatrix());
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
             }
             selected = null;
             // object has been moved, invalidate all other cursors to check for events
