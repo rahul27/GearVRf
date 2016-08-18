@@ -128,21 +128,7 @@ public class MovableBehavior extends SelectableBehavior {
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
                 cursorModelMatrix.invert();
-
-                // Transform position
-                selectedPosition.set(selectedTransform.getPositionX(), selectedTransform
-                                .getPositionY(),selectedTransform.getPositionZ());
-                selectedPosition.mulPoint(cursorModelMatrix);
-                selectedTransform.setPosition(selectedPosition.x, selectedPosition.y,
-                        selectedPosition.z);
-
-                // Transform rotation
-                selectedRotation.set(selectedTransform.getRotationX(), selectedTransform
-                                .getRotationY(),selectedTransform.getRotationZ(),
-                        selectedTransform.getRotationW());
-                Utils.matrixRotation(cursorModelMatrix,selectedRotation, selectedRotation);
-                selectedTransform.setRotation(selectedRotation.w, selectedRotation.x,
-                        selectedRotation.y,selectedRotation.z);
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedTransform.getModelMatrix4f()));
                 ownerParent.removeChildObject(selected);
                 cursorSceneObject.addChildObject(selected);
             }
@@ -189,24 +175,9 @@ public class MovableBehavior extends SelectableBehavior {
 
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
-
-                // transform position
-                selectedPosition.set(selectedTransform.getPositionX(), selectedTransform
-                                .getPositionY(), selectedTransform.getPositionZ());
-                selectedPosition.mulPoint(cursorModelMatrix);
-                selectedTransform.setPosition(selectedPosition.x, selectedPosition.y,
-                        selectedPosition.z);
-
-                // transform rotation
-                selectedRotation.set(selectedTransform.getRotationX(), selectedTransform
-                                .getRotationY(), selectedTransform.getRotationZ(),
-                        selectedTransform.getRotationW());
-                Utils.matrixRotation(cursorModelMatrix, selectedRotation, selectedRotation);
-                selectedTransform.setRotation(selectedRotation.w, selectedRotation.x,
-                        selectedRotation.y, selectedRotation.z);
-
                 cursorSceneObject.removeChildObject(selected);
                 ownerParent.addChildObject(selected);
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedTransform.getModelMatrix4f()));
             }
             selected = null;
             // object has been moved, invalidate all other cursors to check for events
