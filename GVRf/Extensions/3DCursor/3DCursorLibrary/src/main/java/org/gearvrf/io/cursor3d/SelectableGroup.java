@@ -4,10 +4,16 @@ import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class SelectableGroup extends GVRComponent {
     static private long TYPE_SELECTABLE_GROUP = ((long) SelectableGroup.class.hashCode() << 32) &
             (System.currentTimeMillis() & 0xffffffff);
     private GVRSceneObject parent;
+     Set<GVRSceneObject> intersectingList = new HashSet<GVRSceneObject>();
 
     protected SelectableGroup(GVRContext gvrContext, GVRSceneObject sceneObject) {
         super(gvrContext, 0);
@@ -37,4 +43,6 @@ public class SelectableGroup extends GVRComponent {
     public static long getComponentType() {
         return TYPE_SELECTABLE_GROUP;
     }
+
+
 }

@@ -87,9 +87,7 @@ public class GVRBaseSensor {
                 event.setOver(false);
                 events.add(event);
             }
-            if (data.getActive() == false) {
-                prevHits.clear();
-            }
+            prevHits.clear();
         }
 
         if (newHits.isEmpty() == false) {

@@ -16,6 +16,7 @@
 
 package org.gearvrf.io.cursor3d;
 
+import android.util.Log;
 import android.view.KeyEvent;
 
 import org.gearvrf.GVRBaseSensor;
@@ -24,6 +25,7 @@ import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSwitch;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 import org.joml.Matrix4f;
@@ -62,24 +64,42 @@ class ObjectCursor extends Cursor {
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
 
-        SelectableGroup selectableBehavior = (SelectableGroup) object.getComponent
-                (SelectableGroup.getComponentType());
+        boolean colliding = false;
 
-        if (selectableBehavior != null) {
-            object = selectableBehavior.getParent();
+        if( isColliding(object)){
+            colliding = true;
         }
 
-        if (intersecting.contains(object)) {
-            createAndSendCursorEvent(object, true, event.getHitPoint(), true, active,
+        SelectableGroup selectableBehavior = (SelectableGroup) object.getComponent
+                (SelectableGroup.getComponentType());
+        if (selectableBehavior != null) {
+            if(colliding){
+                selectableBehavior.intersectingList.add(object);
+
+            }else{
+                selectableBehavior.intersectingList.remove(object);
+                if(!selectableBehavior.intersectingList.isEmpty()){
+                    colliding = true;
+                }else{
+                    colliding = false;
+                }
+            }
+            object = selectableBehavior.getParent();
+
+        }
+
+        if (object != null && colliding) {
+            createAndSendCursorEvent(object, true, event.getHitPoint(), true, event.isActive(),
                     event.getCursorController().getKeyEvent());
         } else {
             createAndSendCursorEvent(object, false, event.getHitPoint(), event.isOver
-                    (), active, event.getCursorController().getKeyEvent());
+                    (), event.isActive(), event.getCursorController().getKeyEvent());
         }
     }
 
     private void createAndSendCursorEvent(GVRSceneObject sceneObject, boolean colliding, float[]
             hitPoint, boolean isOver, boolean isActive, KeyEvent keyEvent) {
+
         CursorEvent cursorEvent = CursorEvent.obtain();
         cursorEvent.setColliding(colliding);
         cursorEvent.setHitPoint(hitPoint);
@@ -89,13 +109,14 @@ class ObjectCursor extends Cursor {
         cursorEvent.setCursor(this);
         cursorEvent.setKeyEvent(keyEvent);
 
-        if (intersecting.isEmpty() == false) {
+        if (colliding) {
             if (isActive) {
                 checkAndSetAsset(Action.CLICK);
             } else {
                 checkAndSetAsset(Action.INTERSECT);
             }
         } else {
+
             checkAndSetAsset(Action.DEFAULT);
         }
 
@@ -119,9 +140,9 @@ class ObjectCursor extends Cursor {
                 return;
             }
 
-            lookAt();
+            //lookAt();
 
-            KeyEvent keyEvent = controller.getKeyEvent();
+            /*KeyEvent keyEvent = controller.getKeyEvent();
             if (keyEvent != null) {
                 active = (keyEvent.getAction() == KeyEvent.ACTION_DOWN);
             }
@@ -139,7 +160,7 @@ class ObjectCursor extends Cursor {
                 createAndSendCursorEvent(object, false, EMPTY_HIT_POINT, false, active, keyEvent);
             }
             previousHits.clear();
-            previousHits.addAll(newHits);
+            previousHits.addAll(newHits);*/
         }
     };
 
