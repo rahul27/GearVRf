@@ -975,7 +975,11 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     public void setEnable(boolean enable) {
         NativeSceneObject.setEnable(getNative(), enable);
     }
-    
+
+
+     void allowDirtyBoundingVolume(boolean enable) {
+        NativeSceneObject.allowDirtyBoundingVolume(getNative(), enable);
+    }
     /**
      * Tests the {@link GVRSceneObject}s hierarchical bounding volume against
      * the specified ray.
@@ -1333,6 +1337,7 @@ class NativeSceneObject {
     static native boolean isEnabled(long sceneObject);
 
     static native void setEnable(long sceneObject, boolean flag);
+    static native void allowDirtyBoundingVolume(long sceneObject, boolean flag);
     
     static native boolean intersectsBoundingVolume(long sceneObject, float rox,
             float roy, float roz, float rdx, float rdy, float rdz);

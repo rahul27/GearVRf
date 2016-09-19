@@ -31,7 +31,7 @@ SceneObject::SceneObject() :
         HybridObject(), name_(""), children_(), visible_(true), transform_dirty_(false), in_frustum_(
                 false),  enabled_(true),query_currently_issued_(false), vis_count_(0), lod_min_range_(
                 0), lod_max_range_(MAXFLOAT), cull_status_(false), using_lod_(false), bounding_volume_dirty_(
-                true) {
+                true), allowDirtyBoundingVolume_(true) {
 
     // Occlusion query setup
     queries_ = new GLuint[1];
@@ -51,6 +51,10 @@ bool SceneObject::attachComponent(Component* component) {
     components_.push_back(component);
     dirtyHierarchicalBoundingVolume();
     return true;
+}
+
+void SceneObject::allowDirtyBoundingVolume(bool value){
+ allowDirtyBoundingVolume_ = value;
 }
 
 bool SceneObject::detachComponent(Component* component) {
@@ -298,7 +302,7 @@ bool SceneObject::intersectsBoundingVolume(float rox, float roy, float roz,
 }
 
 void SceneObject::dirtyHierarchicalBoundingVolume() {
-    if (bounding_volume_dirty_) {
+    if (bounding_volume_dirty_ || !allowDirtyBoundingVolume_) {
         return;
     }
 
@@ -313,6 +317,8 @@ BoundingVolume& SceneObject::getBoundingVolume() {
     if (!bounding_volume_dirty_) {
         return transformed_bounding_volume_;
     }
+     LOGD("getBV%s\n", name_.c_str());
+
     RenderData* rdata = render_data();
     // Calculate the new bounding volume from itself and all its children
     // 1. Start from its own mesh's bounding volume if there is any

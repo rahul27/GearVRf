@@ -170,6 +170,8 @@ public:
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
 
+    void allowDirtyBoundingVolume(bool value);
+
     int frustumCull(glm::vec3 camera_position, const float frustum[6][4], int& planeMask);
 
 private:
@@ -185,6 +187,7 @@ private:
     BoundingVolume transformed_bounding_volume_;
     bool bounding_volume_dirty_;
     BoundingVolume mesh_bounding_volume;
+    bool allowDirtyBoundingVolume_;
 
     //Flags to check for visibility of a node and
     //whether there are any pending occlusion queries on it

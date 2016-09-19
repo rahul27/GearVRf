@@ -67,6 +67,10 @@ extern "C" {
     Java_org_gearvrf_NativeSceneObject_setEnable(
             JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
 
+            JNIEXPORT bool JNICALL
+            Java_org_gearvrf_NativeSceneObject_allowDirtyBoundingVolume(
+                    JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
+
     JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativeSceneObject_intersectsBoundingVolume(JNIEnv * env,
             jobject obj, jlong jscene_object, jfloat rox, jfloat roy, jfloat roz,
@@ -184,6 +188,13 @@ Java_org_gearvrf_NativeSceneObject_setEnable(
         JNIEnv * env, jobject obj, jlong jscene_object, bool flag) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
     scene_object->set_enable(flag);
+}
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_allowDirtyBoundingVolume(
+        JNIEnv * env, jobject obj, jlong jscene_object, bool flag) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    scene_object->allowDirtyBoundingVolume(flag);
 }
 
 JNIEXPORT bool JNICALL

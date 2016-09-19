@@ -92,11 +92,16 @@ public abstract class GVRCameraRig extends GVRComponent implements PrettyPrint {
         getOwnerObject().attachCameraRig(this);
 
         headTransformObject = new GVRSceneObject(gvrContext);
+        headTransformObject.allowDirtyBoundingVolume(false);
         addHeadTransformObject();
 
         leftCameraObject = new GVRSceneObject(gvrContext);
         rightCameraObject = new GVRSceneObject(gvrContext);
         centerCameraObject = new GVRSceneObject(gvrContext);
+
+        leftCameraObject.allowDirtyBoundingVolume(false);
+        rightCameraObject.allowDirtyBoundingVolume(false);
+        centerCameraObject.allowDirtyBoundingVolume(false);
 
         headTransformObject.addChildObject(leftCameraObject);
         headTransformObject.addChildObject(rightCameraObject);
