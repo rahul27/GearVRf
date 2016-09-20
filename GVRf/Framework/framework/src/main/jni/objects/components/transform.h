@@ -126,9 +126,15 @@ public:
         invalidate(true);
     }
 
-    void set_rotation(const glm::quat& roation) {
-        rotation_ = roation;
+    void set_rotation(const glm::quat& rotation) {
+        rotation_ = rotation;
         invalidate(true);
+    }
+
+    // update the rotation without invalidating the Hierarchical Bounding Volume
+    void set_rotation(const glm::quat& rotation, bool dirtyHierarchicalBoundingVolume) {
+        rotation_ = rotation;
+        invalidate(true, dirtyHierarchicalBoundingVolume);
     }
 
     const glm::vec3& scale() const {
@@ -178,7 +184,7 @@ public:
         return model_matrix_.isValid();
     }
 
-    void invalidate(bool rotationUpdated);
+    void invalidate(bool rotationUpdated, bool dirtyHierarchicalBoundingVolume = true);
     glm::mat4 getModelMatrix();
     glm::mat4 getLocalModelMatrix();
     void translate(float x, float y, float z);

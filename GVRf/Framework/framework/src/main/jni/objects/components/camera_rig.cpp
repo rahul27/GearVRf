@@ -149,7 +149,8 @@ void CameraRig::setRotation(const glm::quat& transform_rotation) {
     Transform* transform = getHeadTransform();
 
     if (camera_rig_type_ == FREE) {
-        transform->set_rotation(transform_rotation);
+        // update the rotation without invalidating the Hierarchical Bounding Volume
+        transform->set_rotation(transform_rotation, false);
     } else if (camera_rig_type_ == YAW_ONLY) {
         glm::vec3 look_at = glm::rotate(transform_rotation,
                 glm::vec3(0.0f, 0.0f, -1.0f));

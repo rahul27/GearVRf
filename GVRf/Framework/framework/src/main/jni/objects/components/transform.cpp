@@ -35,7 +35,8 @@ Transform::Transform() :
 Transform::~Transform() {
 }
 
-void Transform::invalidate(bool rotationUpdated) {
+void Transform::invalidate(bool rotationUpdated,
+                           bool dirtyHierarchicalBoundingVolume /* default true*/) {
     owner_object()->setTransformDirty();
     if (model_matrix_.isValid()) {
         model_matrix_.invalidate();
@@ -43,7 +44,7 @@ void Transform::invalidate(bool rotationUpdated) {
         for (auto it = childrenCopy.begin(); it != childrenCopy.end(); ++it) {
             Transform* const t = (*it)->transform();
             if (nullptr != t) {
-                t->invalidate(false);
+                t->invalidate(false, dirtyHierarchicalBoundingVolume);
             }
         }
     }
@@ -60,7 +61,7 @@ void Transform::invalidate(bool rotationUpdated) {
         }
     }
 
-    if(owner_object()) {
+    if(dirtyHierarchicalBoundingVolume && owner_object()) {
         owner_object()->dirtyHierarchicalBoundingVolume();
     }
 }
