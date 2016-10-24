@@ -15,6 +15,8 @@
 package com.sample.hand.template;
 
 import org.gearvrf.GVRSceneObject;
+import org.joml.Matrix4d;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -25,21 +27,23 @@ import org.joml.Vector3f;
 public abstract class IOBaseComponent {
     public GVRSceneObject sceneObject;
     private int type;
-    private GVRSceneObject handSceneObject;
+    private GVRSceneObject parent;
     private Vector3f componentPosition;
     private Quaternionf componentRotation;
+    private Vector3f scratchVector;
 
     /**
      * Create an {@link IOBaseComponent} of the provided type.
      *
      * @param type            the type of the {@link IOBaseComponent}.
-     * @param handSceneObject This is the root {@link GVRSceneObject} that represents the hand.
+     * @param parent This is the root {@link GVRSceneObject} that represents the hand.
      */
-    public IOBaseComponent(int type, GVRSceneObject handSceneObject) {
+    public IOBaseComponent(int type, GVRSceneObject parent) {
         this.type = type;
-        this.handSceneObject = handSceneObject;
+        this.parent = parent;
         componentPosition = new Vector3f();
         componentRotation = new Quaternionf();
+        scratchVector = new Vector3f();
     }
 
     /**
@@ -52,14 +56,22 @@ public abstract class IOBaseComponent {
     }
 
     /**
+     * Set the parent of this component
+     * @param sceneObject
+     */
+    public void setParent(GVRSceneObject sceneObject) {
+        this.parent = sceneObject;
+    }
+
+    /**
      * This call sets the {@link GVRSceneObject} that represents this {@link IOBaseComponent} and
      * adds it to the root hand object.
      *
-     * @param boneSceneObject
+     * @param sceneObject
      */
-    public void setSceneObject(GVRSceneObject boneSceneObject) {
-        this.sceneObject = boneSceneObject;
-        handSceneObject.addChildObject(boneSceneObject);
+    public void setSceneObject(GVRSceneObject sceneObject) {
+        this.sceneObject = sceneObject;
+        parent.addChildObject(sceneObject);
     }
 
     /**
@@ -124,7 +136,16 @@ public abstract class IOBaseComponent {
      * @return the position as a vector
      */
     public Vector3f getPosition() {
-        return componentPosition;
+        if (sceneObject != null) {
+            // use the hierarchical position
+            Matrix4f matrix4f = sceneObject.getTransform().getModelMatrix4f();
+            scratchVector.zero();
+            matrix4f.transformPoint(scratchVector, scratchVector);
+            return scratchVector;
+        }else{
+            return  componentPosition;
+        }
+
     }
 
     /**

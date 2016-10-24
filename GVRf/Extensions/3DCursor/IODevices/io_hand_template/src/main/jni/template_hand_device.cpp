@@ -108,6 +108,9 @@ public:
         count++;
         float xOffset;
         int h;
+
+        // generate relative positions
+
         for (h = 0; h < NUM_HANDS; h++) {
             xOffset = 3.0f;
 
@@ -122,27 +125,27 @@ public:
                 count++;
 
                 // proximal x , y , z
-                data[count] = xOffset;
+                data[count] = 0.0f;
                 count++;
-                data[count] = (-4.0f);
+                data[count] = (0.0f);
                 count++;
-                data[count] = DEPTH;
+                data[count] = 0.0f;
                 count++;
 
                 // intermediate x , y , z
-                data[count] = xOffset - 1.0f;
+                data[count] = -1.0f;
                 count++;
-                data[count] = (-2.0f);
+                data[count] = (2.0f);
                 count++;
-                data[count] = DEPTH - 2.0f;
+                data[count] = -2.0f;
                 count++;
 
                 // distal x , y , z
-                data[count] = xOffset - 2.0f;
+                data[count] = -1.0f;
                 count++;
-                data[count] = (-0.5f);
+                data[count] = (2.0f);
                 count++;
-                data[count] = DEPTH - 3.0f;
+                data[count] = -2.0f;
                 count++;
             }
             else {
@@ -157,27 +160,27 @@ public:
                 count++;
 
                 // proximal x , y , z
-                data[count] = xOffset + 6.0f;
+                data[count] = 0.0f;
                 count++;
-                data[count] = (-4.0f);
+                data[count] = 0.0f;
                 count++;
-                data[count] = DEPTH;
+                data[count] = 0.0f;
                 count++;
 
                 // intermediate x , y , z
-                data[count] = xOffset + 6.0f + 1.0f;
+                data[count] = 1.0f;
                 count++;
-                data[count] = (-2.0f);
+                data[count] = (2.0f);
                 count++;
-                data[count] = DEPTH - 2.0f;
+                data[count] = -2.0f;
                 count++;
 
                 // distal x , y , z
-                data[count] = xOffset + 6.0f + 2.0f;
+                data[count] = +1.0f;
                 count++;
-                data[count] = (-0.5f);
+                data[count] = (2.0f);
                 count++;
-                data[count] = DEPTH - 3.0f;
+                data[count] = -2.0f;
                 count++;
             }
 
@@ -185,12 +188,21 @@ public:
             for (fingerNum = 0; fingerNum < 4; fingerNum++) {
                 int boneNum = 0;
                 for (boneNum = 0; boneNum < 4; boneNum++) {
-                    data[count] = xOffset + fingerNum * 2.0f;
-                    count++;
-                    data[count] = (2.0f * boneNum);
-                    count++;
-                    data[count] = DEPTH;
-                    count++;
+                    if(boneNum == 0) {
+                        data[count] = xOffset + fingerNum * 2.0f;
+                        count++;
+                        data[count] = (2.0f * boneNum);
+                        count++;
+                        data[count] = DEPTH;
+                        count++;
+                    }else{
+                        data[count] = 0.0f;
+                        count++;
+                        data[count] = 2.0f;
+                        count++;
+                        data[count] = 0.0f;
+                        count++;
+                    }
                 }
             }
 

@@ -33,6 +33,7 @@ public class IOFinger extends IOBaseComponent {
 
     private Map<Integer, IOBone> boneMap;
     private Map<Integer, IOJoint> jointMap;
+    private GVRSceneObject fingerSceneObject;
 
     public static String getString(int i) {
         switch (i) {
@@ -54,25 +55,30 @@ public class IOFinger extends IOBaseComponent {
     /**
      * Create an {@link IOFinger} of the given type
      *
-     * @param type            the type of the
-     *                        {@link IOFinger}. Use the {@link IOFinger#getString(int)} call to
-     *                        know the readable type of the finger.
-     * @param handSceneObject This is the root {@link GVRSceneObject} that represents the hand.
+     * @param type   the type of the
+     *               {@link IOFinger}. Use the {@link IOFinger#getString(int)} call to
+     *               know the readable type of the finger.
+     * @param parent This is the root {@link GVRSceneObject} that represents the hand.
      */
-    public IOFinger(int type, GVRSceneObject handSceneObject) {
-        super(type, handSceneObject);
+    public IOFinger(int type, GVRSceneObject parent) {
+        super(type, parent);
 
-        IOBone distal = new IOBone(IOBone.DISTAL, handSceneObject);
-        IOBone intermediate = new IOBone(IOBone.INTERMEDIATE, handSceneObject);
-        IOBone proximal = new IOBone(IOBone.PROXIMAL, handSceneObject);
+        //create a finger object and add to hand
+        fingerSceneObject = new GVRSceneObject(parent.getGVRContext());
+        fingerSceneObject.setName("Finger " + IOFinger.getString(type));
+        parent.addChildObject(fingerSceneObject);
+
+        IOBone distal = new IOBone(IOBone.DISTAL, parent);
+        IOBone intermediate = new IOBone(IOBone.INTERMEDIATE, parent);
+        IOBone proximal = new IOBone(IOBone.PROXIMAL, parent);
 
         // Not required
-        //IOBone metacarpal = new IOBone(handSceneObject, IOBone.METACARPAL);
+        //IOBone metacarpal = new IOBone(parent, IOBone.METACARPAL);
 
-        IOJoint jointTip = new IOJoint(IOJoint.TIP, handSceneObject);
-        IOJoint jointDip = new IOJoint(IOJoint.DIP, handSceneObject);
-        IOJoint jointPip = new IOJoint(IOJoint.PIP, handSceneObject);
-        IOJoint jointMcp = new IOJoint(IOJoint.MCP, handSceneObject);
+        IOJoint jointTip = new IOJoint(IOJoint.TIP, null);
+        IOJoint jointDip = new IOJoint(IOJoint.DIP, null);
+        IOJoint jointPip = new IOJoint(IOJoint.PIP, null);
+        IOJoint jointMcp = new IOJoint(IOJoint.MCP, null);
 
         boneMap = new HashMap<Integer, IOBone>(4);
         boneMap.put(IOBone.DISTAL, distal);
@@ -86,6 +92,15 @@ public class IOFinger extends IOBaseComponent {
         jointMap.put(IOJoint.DIP, jointDip);
         jointMap.put(IOJoint.PIP, jointPip);
         jointMap.put(IOJoint.MCP, jointMcp);
+    }
+
+    /**
+     * Return the finger object
+     *
+     * @return
+     */
+    public GVRSceneObject getSceneObject() {
+        return fingerSceneObject;
     }
 
     /**

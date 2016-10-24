@@ -52,9 +52,9 @@ public class IOBone extends IOBaseComponent {
      * @param type            the type of the
      *                        {@link IOBone}. Use the {@link IOBone#getString(int)} call to
      *                        know the readable type of the bone.
-     * @param handSceneObject This is the root {@link GVRSceneObject} that represents the hand.
+     * @param parent This is the root {@link GVRSceneObject} that represents the hand.
      */
-    public IOBone(int type, GVRSceneObject handSceneObject) {
-        super(type, handSceneObject);
+    public IOBone(int type, GVRSceneObject parent) {
+        super(type, parent);
     }
 }

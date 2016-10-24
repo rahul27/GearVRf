@@ -20,11 +20,13 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.io.cursor3d.*;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
+import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -63,8 +65,10 @@ public class HandTemplateDevice {
     // create Quaternion objects to reduce GC cycles.
     private static final Quaternionf cursorRotation = new Quaternionf();
     private Quaternionf boneRotation = new Quaternionf();
+    private static Matrix4f inverseCameraMatrix = new Matrix4f();
 
     private Future<GVRTexture> boneTexture;
+    private GVRScene scene;
 
     /**
      * Construct the Hand device object
@@ -74,6 +78,7 @@ public class HandTemplateDevice {
      */
     public HandTemplateDevice(GVRContext context, GVRScene scene) {
         this.context = context;
+        this.scene = scene;
 
         // Create a readback buffer and forward it to the native layer
         readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
@@ -82,15 +87,17 @@ public class HandTemplateDevice {
 
         try {
             boneTexture = context.loadFutureTexture(new GVRAndroidResource
-                    (context, "cube_texture.png"));
+                    (context, "bone_texture.png"));
+            Future<GVRMesh> jointMesh = context.loadFutureMesh(new GVRAndroidResource(context,
+                    "sphere.obj"));
             Future<GVRTexture> jointTexture = context.loadFutureTexture(new GVRAndroidResource
-                    (context, "cube_texture.png"));
+                    (context, "joint_texture.png"));
             rightHand = new IOHand(context);
             leftHand = new IOHand(context);
 
             // Uncomment the following lines to add scene objects to joints
-            //setJointSceneObject(rightHand, jointTexture);
-            //setJointSceneObject(leftHand, jointTexture);
+            setJointSceneObject(rightHand, jointMesh, jointTexture);
+            setJointSceneObject(leftHand, jointMesh, jointTexture);
             setPalmSceneObject(rightHand, jointTexture);
             setPalmSceneObject(leftHand, jointTexture);
         } catch (IOException e) {
@@ -104,6 +111,9 @@ public class HandTemplateDevice {
         GVRCameraRig mainCameraRig = scene.getMainCameraRig();
         mainCameraRig.addChildObject(leftHand.getSceneObject());
         mainCameraRig.addChildObject(rightHand.getSceneObject());
+
+        printTree(leftHand.getSceneObject(), 0);
+        printTree(rightHand.getSceneObject(), 0);
 
         /**
          * It is important that we create a new thread so that the GL and the Main Android threads
@@ -119,17 +129,43 @@ public class HandTemplateDevice {
         thread.start();
     }
 
-    void setJointSceneObject(IOHand hand, Future<GVRTexture> jointTexture) {
+    void printTree(GVRSceneObject node, int level) {
+        Log.d(TAG, "Object at level %d is %s", level, node.getName());
+        for (GVRSceneObject child : node.getChildren()) {
+            printTree(child, level + 1);
+        }
+    }
+
+    void setJointSceneObject(IOHand hand, Future<GVRMesh> jointMesh, Future<GVRTexture>
+            jointTexture) {
         for (int i = 0; i < 5; i++) {
             IOFinger finger = hand.getIOFinger(i);
+
             for (int j = 1; j < 5; j++) {
-                // ignore index tip
+                IOJoint joint = finger.getIOJoint(j);
+                GVRSceneObject jointSceneObject = null;
                 if (!(i == IOFinger.INDEX && j == IOJoint.TIP)) {
-                    IOJoint joint = finger.getIOJoint(j);
-                    joint.setSceneObject(new GVRCubeSceneObject(context, true, jointTexture));
-                    // Customize your joint scene object here
-                    //joint.setSceneObject();
+                    jointSceneObject = new GVRSceneObject(context, jointMesh,
+                            jointTexture);
+                } else {
+                    //add a dummy object for the index tip
+                    jointSceneObject = new GVRSceneObject(context);
                 }
+
+                jointSceneObject.setName("Joint " + IOJoint.getString(joint.getType()));
+
+                GVRSceneObject parent;
+                // set the parent
+                if (j == 1) {
+                    // root the MCP at the finger
+                    parent = finger.getSceneObject();
+                } else {
+                    IOJoint parentJoint = finger.getIOJoint(j - 1);
+                    parent = parentJoint.getSceneObject();
+                }
+                // Customize your joint scene object here
+                joint.setParent(parent);
+                joint.setSceneObject(jointSceneObject);
             }
         }
     }
@@ -209,11 +245,13 @@ public class HandTemplateDevice {
             //Process Thumbs
             IOFinger ioFinger = ioHand.getIOFinger(IOFinger.THUMB);
             for (int boneNum = 0; boneNum < 4; boneNum++) {
+
                 IOJoint ioJoint = ioFinger.getIOJoint(boneNum + 1);
                 if (ioJoint != null) {
                     ioJoint.setPosition(readbackBuffer.get(count), readbackBuffer.get
                             (count + 1), readbackBuffer.get(count + 2));
                 }
+
                 count = count + 3;
             }
 
@@ -224,11 +262,13 @@ public class HandTemplateDevice {
                 for (int fingerNum = 1; fingerNum < 5; fingerNum++) {
                     ioFinger = ioHand.getIOFinger(fingerNum);
                     for (int boneNum = 0; boneNum < 4; boneNum++) {
+
                         IOJoint ioJoint = ioFinger.getIOJoint(boneNum + 1);
                         if (ioJoint != null) {
                             ioJoint.setPosition(readbackBuffer.get(count), readbackBuffer.get
                                     (count + 1), readbackBuffer.get(count + 2));
                         }
+
                         count = count + 3;
                     }
                     setBones(ioFinger);
@@ -238,11 +278,13 @@ public class HandTemplateDevice {
                 for (int fingerNum = 4; fingerNum > 0; fingerNum--) {
                     ioFinger = ioHand.getIOFinger(fingerNum);
                     for (int boneNum = 0; boneNum < 4; boneNum++) {
+
                         IOJoint ioJoint = ioFinger.getIOJoint(boneNum + 1);
                         if (ioJoint != null) {
                             ioJoint.setPosition(readbackBuffer.get(count), readbackBuffer.get
                                     (count + 1), readbackBuffer.get(count + 2));
                         }
+
                         count = count + 3;
                     }
                     setBones(ioFinger);
@@ -275,6 +317,8 @@ public class HandTemplateDevice {
     }
 
     public void setBones(IOFinger ioFinger) {
+        inverseCameraMatrix.set(scene.getMainCameraRig().getHeadTransform().getModelMatrix());
+        inverseCameraMatrix.invert();
         //set the positions of the bones
         processBones(ioFinger, IOBone.DISTAL, IOJoint.DIP, IOJoint.TIP);
         processBones(ioFinger, IOBone.INTERMEDIATE, IOJoint.PIP, IOJoint.DIP);
@@ -284,8 +328,14 @@ public class HandTemplateDevice {
     public void processBones(IOFinger ioFinger, int bone, int prevBone, int nextBone) {
         IOBone ioBone = ioFinger.getIOBone(bone);
         GVRSceneObject boneSceneObject = ioBone.sceneObject;
+
         Vector3f prev = ioFinger.getIOJoint(prevBone).getPosition();
         Vector3f next = ioFinger.getIOJoint(nextBone).getPosition();
+
+        // invert the camera matrix while calculating look at.
+        inverseCameraMatrix.transformPoint(prev, prev);
+        inverseCameraMatrix.transformPoint(next, next);
+
         if (boneSceneObject == null) {
             float len = prev.distance(next);
             if (len == 0.0f) {
@@ -295,9 +345,15 @@ public class HandTemplateDevice {
             GVRMaterial material = new GVRMaterial(context);
             material.setMainTexture(boneTexture);
             // Customize your bone scene object here
-            // add a cube
-            boneSceneObject = new GVRCubeSceneObject(context, true, material, new Vector3f(1.0f,
-                    len - 0.5f, 1.0f));
+            // add a cylinder instead of a cube
+            GVRCylinderSceneObject.CylinderParams params = new GVRCylinderSceneObject
+                    .CylinderParams();
+            params.Height = len - 0.5f;
+
+            params.Material = material;
+            boneSceneObject = new GVRCylinderSceneObject(context, params);
+            //boneSceneObject = new GVRCubeSceneObject(context, true, material, new Vector3f(1.0f,
+            //        len - 0.5f, 1.0f));
             ioBone.setSceneObject(boneSceneObject);
         }
 
@@ -406,9 +462,11 @@ public class HandTemplateDevice {
         }
 
         public void process(Vector3f position, Quaternionf rotation) {
-            cameraMatrix.set(scene.getMainCameraRig().getHeadTransform().getModelMatrix());
-            position.mulPoint(cameraMatrix);
-            Utils.matrixRotation(cameraMatrix, rotation, rotation);
+
+            // no longer needed since the positions now account for the camera transforms
+            //cameraMatrix.set(scene.getMainCameraRig().getHeadTransform().getModelMatrix());
+            //position.mulPoint(cameraMatrix);
+            //Utils.matrixRotation(cameraMatrix, rotation, rotation);
             super.setPosition(position.x, position.y, position.z);
             super.setRotation(rotation.w, rotation.x, rotation.y, rotation.z);
         }
