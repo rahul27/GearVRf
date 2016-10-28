@@ -33,12 +33,12 @@ public class GVRSkeletalController {
     private final Matrix4f scratchGlobalInverse;
     private final Matrix4f finalMatrix;
 
-    protected class SceneNode {
+    public class SceneNode {
         private int updateStatus;
-        private GVRSceneObject sceneObject;
+        public GVRSceneObject sceneObject;
         private SceneNode parent;
         private List<SceneNode> children;
-        private Matrix4f localTransform;
+        public Matrix4f localTransform;
         private Matrix4f globalTransform;
         private boolean isValid;
         private Vector3f globalPosition;
@@ -175,6 +175,22 @@ public class GVRSkeletalController {
         SceneNode node = nodeByName.get(sceneObject.getName());
         node.updateStatus = node.updateStatus | UPDATED_LOCAL_TRANSFORM;
         node.localTransform.set(matrix4f);
+    }
+
+    /**
+     * Update the local matrix transform of the provided {@link GVRSceneObject}
+     *
+     * @param bone the corresponding {@link GVRSceneObject}
+     * @param matrix4f    the new local transform matrix
+     */
+    public void updateLocalMatrix(GVRBone bone, Matrix4f matrix4f) {
+        SceneNode node = nodeByName.get(bone.getName());
+        node.updateStatus = node.updateStatus | UPDATED_LOCAL_TRANSFORM;
+        node.localTransform.set(matrix4f);
+    }
+
+    public SceneNode getSceneNode(GVRBone bone){
+        return  nodeByName.get(bone.getName());
     }
 
     protected void updateTransforms(SceneNode node, Matrix4f parentTransform) {
