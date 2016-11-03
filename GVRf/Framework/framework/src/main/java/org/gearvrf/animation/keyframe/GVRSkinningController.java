@@ -5,31 +5,39 @@ import java.util.Map;
 
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSkeletalController;
+import org.gearvrf.Pose;
+import org.gearvrf.Skeleton;
 
 /**
  * Controls skeletal animation (skinning).
  */
 public class GVRSkinningController extends GVRAnimationController {
-    private GVRSkeletalController controller;
+    //private GVRSkeletalController controller;
+
+    Skeleton skeleton;
+    Pose pose;
     private Map<Integer, GVRSceneObject> channelToNode;
 
     public GVRSkinningController(GVRSceneObject sceneRoot, GVRKeyFrameAnimation animation) {
         super(animation);
-        controller = new GVRSkeletalController(sceneRoot);
+        skeleton = new Skeleton(sceneRoot);
+        skeleton.findBones(null);
+
+        pose = skeleton.getPose();
         channelToNode = new HashMap<>();
-        parseTree(controller, sceneRoot);
-        controller.pruneTree();
+        parseTree(pose, sceneRoot);
+        pose.pruneTree();
     }
 
-    void parseTree(GVRSkeletalController controller, GVRSceneObject sceneObject) {
+    void parseTree(Pose pose, GVRSceneObject sceneObject) {
         int channelId = animation.findChannel(sceneObject.getName());
         if (channelId != -1) {
             channelToNode.put(channelId, sceneObject);
         } else {
-            controller.setInvalid(sceneObject);
+            pose.setInvalid(sceneObject);
         }
         for (GVRSceneObject child : sceneObject.getChildren()) {
-            parseTree(controller, child);
+            parseTree(pose, child);
         }
     }
 
@@ -38,8 +46,8 @@ public class GVRSkinningController extends GVRAnimationController {
         int i = 0;
         for (GVRAnimationChannel channel : animation.mChannels) {
             GVRSceneObject sceneObject = channelToNode.get(i++);
-            controller.updateLocalMatrix(sceneObject, channel.animate(animationTick));
+            pose.updateLocalMatrix(sceneObject, channel.animate(animationTick));
         }
-        controller.update();
+        skeleton.update();
     }
 }

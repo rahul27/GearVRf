@@ -17,21 +17,20 @@ import java.util.TreeMap;
  * Use this class to control the skeletal structure of
  * a loaded model.
  */
-public class GVRSkeletalController {
-    private static final String TAG = GVRSkeletalController.class.getSimpleName();
+public class Pose {
+    private static final String TAG = Pose.class.getSimpleName();
     private static int UPDATED_GLOBAL_POSITION = 1 << 0;
     private static int UPDATED_GLOBAL_ROTATION = 1 << 1;
     private static int UPDATED_LOCAL_TRANSFORM = 1 << 2;
     protected GVRContext gvrContext;
     protected GVRSceneObject rootSceneObject;
-    protected SceneNode rootSceneNode;
+    //protected SceneNode rootSceneNode;
     private Map<String, SceneNode> nodeByName;
-    protected Map<GVRSceneObject, List<GVRBone>> boneMap;
+    //protected Map<GVRSceneObject, List<GVRBone>> boneMap;
 
     // temp objects to reduce GC cycles
     private final Vector3f scratchRotationVector;
-    private final Matrix4f scratchGlobalInverse;
-    private final Matrix4f finalMatrix;
+
 
     private class SceneNode {
         private int updateStatus;
@@ -69,18 +68,28 @@ public class GVRSkeletalController {
      *
      * @param sceneObject The corresponding scene object.
      */
-    public GVRSkeletalController(GVRSceneObject sceneObject) {
+    public Pose(GVRSceneObject sceneObject) {
         this.rootSceneObject = sceneObject;
         nodeByName = new TreeMap<String, SceneNode>();
-        boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
+        //boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
         scratchRotationVector = new Vector3f();
-        scratchGlobalInverse = new Matrix4f();
-        finalMatrix = new Matrix4f();
-        this.rootSceneNode = createTree(sceneObject, null);
+
+        //this.rootSceneNode = createTree(sceneObject, null);
+        visit(sceneObject);
+        //this.rootSceneNode  = nodeByName.get(sceneObject.getName());
     }
 
-    protected SceneNode createTree(GVRSceneObject node, SceneNode parent) {
 
+
+    void visit(GVRSceneObject node) {
+        GVRSceneObject parentNode = node.getParent();
+        SceneNode parent = null;
+
+        if(parentNode != null){
+            parent = nodeByName.get(parentNode.getName());
+
+        }
+        Log.v("rahul", "Visit %s", node.getName());
         SceneNode internalNode = new SceneNode(node, parent);
         nodeByName.put(node.getName(), internalNode);
 
@@ -91,41 +100,19 @@ public class GVRSkeletalController {
         // Global transform
         if (parent != null) {
             parent.globalTransform.mul(internalNode.globalTransform, internalNode.globalTransform);
+            parent.children.add(internalNode);
+
+
         }
 
-        setupBone(node);
 
-        for (GVRSceneObject child : node.getChildren()) {
-            SceneNode sceneNode = createTree(child, internalNode);
-            internalNode.children.add(sceneNode);
-        }
 
-        return internalNode;
+
+
+
     }
 
-    protected void setupBone(GVRSceneObject node) {
-        GVRMesh mesh;
-        if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
-            Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertices().length / 3);
-            for (GVRBone bone : mesh.getBones()) {
-                bone.setSceneObject(node);
 
-                GVRSceneObject skeletalNode = rootSceneObject.getSceneObjectByName(bone.getName());
-                if (skeletalNode == null) {
-                    Log.w(TAG, "what? cannot find the skeletal node for bone: %s", bone.toString());
-                    continue;
-                }
-
-                // Create look-up table for bones
-                List<GVRBone> boneList = boneMap.get(skeletalNode);
-                if (boneList == null) {
-                    boneList = new ArrayList<GVRBone>();
-                    boneMap.put(skeletalNode, boneList);
-                }
-                boneList.add(bone);
-            }
-        }
-    }
 
     /**
      * Use this call to update all the bone matrices once the new transforms have been set.
@@ -134,18 +121,9 @@ public class GVRSkeletalController {
      */
     public void update() {
         //this is a pose function
+        SceneNode rootSceneNode = nodeByName.get(rootSceneObject.getName());
         updateTransforms(rootSceneNode, new Matrix4f());
 
-        // this is a skeleton function
-        for (Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet()) {
-            // Transform all bone splits (a bone can be split into multiple instances if they
-            // influence different meshes)
-            SceneNode node = nodeByName.get(ent.getKey().getName());
-            for (GVRBone bone : ent.getValue()) {
-                updateBoneMatrices(bone, node);
-            }
-        }
-        flag = false;
     }
 
     /**
@@ -230,7 +208,7 @@ public class GVRSkeletalController {
     public void updateLocalRotation(String boneName, Quaternionf rotation) {
         SceneNode node = nodeByName.get(boneName);
         if(node == null){
-            throw new IllegalArgumentException("Bone not found");
+            throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
         }
         node.updateStatus = node.updateStatus | UPDATED_LOCAL_TRANSFORM;
         rotation.getEulerAnglesXYZ(scratchRotationVector);
@@ -265,11 +243,19 @@ public class GVRSkeletalController {
     public Matrix4f getLocalMatrix(String boneName){
         SceneNode node = nodeByName.get(boneName);
         if(node == null){
-            throw new IllegalArgumentException("Bone not found");
+            throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
         }
         return node.localTransform;
     }
-    boolean flag = true;
+
+    public Matrix4f getGlobalMatrix(String boneName){
+        SceneNode node = nodeByName.get(boneName);
+        if(node == null){
+            throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
+        }
+        return node.globalTransform;
+    }
+    //boolean flag = true;
     public SceneNode getSceneNode(GVRBone bone) {
         return nodeByName.get(bone.getName());
     }
@@ -280,22 +266,14 @@ public class GVRSkeletalController {
             //do nothing
 
         } else {
-            if(flag) {
-                Log.d("rahul" , "Before Local Transform  for "+ node.sceneObject.getName() + " " +
-                        "is  "+
-                        node.localTransform);
+
+
                 node.localTransform.set(node.sceneObject.getTransform().getLocalModelMatrix4f());
-                Log.d("rahul" , "After Local Transform  2 for "+ node.sceneObject.getName() + " " +
-                        "is  "+
-                        node.localTransform);
-            }
 
         }
 
-        Vector3f scale = new Vector3f();
 
-        node.localTransform.getScale(scale);
-
+        //Log.d("rahul", "Process " + node.sceneObject.getName()+ " " + node.children.size());
 
         parentTransform.mul(node.localTransform, node.globalTransform);
 
@@ -318,23 +296,14 @@ public class GVRSkeletalController {
         }
     }
 
-    protected void updateBoneMatrices(GVRBone bone, SceneNode node) {
-        finalMatrix.set(bone.getOffsetMatrixFloatArray());
 
-        node.globalTransform.mul(finalMatrix, finalMatrix);
-
-        scratchGlobalInverse.set(bone.getSceneObject().getTransform().getModelMatrix());
-        scratchGlobalInverse.invert();
-        scratchGlobalInverse.mul(finalMatrix, finalMatrix);
-
-        bone.setFinalTransformMatrix(finalMatrix);
-    }
 
     /**
      * Prune the tree to remove nodes that may be considered invalid using the
      * {@link #setInvalid(GVRSceneObject)} call.
      */
     public void pruneTree() {
+        SceneNode rootSceneNode = nodeByName.get(rootSceneObject.getName());
         pruneTree(rootSceneNode);
     }
 

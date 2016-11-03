@@ -4,6 +4,7 @@
 #include <assimp/cfileio.h>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
+#include <assimp/config.h>
 
 #include "android/asset_manager_jni.h"
 
@@ -1714,6 +1715,10 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 
 	/* do import */
 	const aiScene *cScene;
+
+	aiPropertyStore *aiprops = aiCreatePropertyStore();
+	aiSetImportPropertyInteger(aiprops, AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);
+
 	if (assetManager) {
 	    AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
 
@@ -1730,8 +1735,8 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 	        }
 	    }
 
-	    cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
-	            extension);
+		cScene = aiImportFileFromMemoryWithProperties(pBuffer, assetSize, (unsigned int) postProcess,
+	            extension, aiprops);
 
 	    delete pBuffer;
 	} else if (jFileIO) {
@@ -1746,7 +1751,7 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 	            .UserData = reinterpret_cast<char*>(&fileOpsData)
 	    };
 
-	    cScene = aiImportFileEx(cFilename, (unsigned int) postProcess, &fileIO);
+	    cScene = aiImportFileExWithProperties(cFilename, (unsigned int) postProcess, &fileIO, aiprops);
 	} else {
 	    cScene = aiImportFile(cFilename, (unsigned int) postProcess);
 	}
