@@ -36,6 +36,7 @@ public class GVRSkinningController extends GVRAnimationController {
         int channelId = animation.findChannel(sceneObject.getName());
         if (channelId != -1) {
             channelToNode.put(channelId, sceneObject);
+            skeleton.setBoneOptions(sceneObject, Skeleton.BONE_ANIMATE);
         } else {
             pose.setInvalid(sceneObject);
         }
