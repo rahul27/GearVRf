@@ -157,7 +157,7 @@ class GVRJassimpAdapter {
 
     private GVRBone createBone(GVRContext ctx, AiBone aiBone) {
         GVRBone bone = new GVRBone(ctx);
-
+        bone.setId(aiBone.getId());
         bone.setName(aiBone.getName());
         bone.setOffsetMatrix(aiBone.getOffsetMatrix(sWrapperProvider));
 

@@ -61,8 +61,16 @@ public final class AiBone {
     AiBone() {
         /* nothing to do */
     }
-    
-    
+
+    /**
+     * Returns the unique id for this bone.
+     *
+     * @return an integer that uniquely identifies this bone.
+     */
+    public int getId() {
+        return m_id;
+    }
+
     /**
      * Returns the name of the bone.
      * 
@@ -115,7 +123,11 @@ public final class AiBone {
         
         return (M4) m_offsetMatrix;
     }
-    
+
+    /**
+     * ID that uniquely identifies this bone.
+     */
+    private int m_id;
     
     /**
      * Name of the bone.

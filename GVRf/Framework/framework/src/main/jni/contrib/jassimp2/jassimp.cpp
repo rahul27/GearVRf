@@ -8,16 +8,16 @@
 
 #include "android/asset_manager_jni.h"
 
-#ifdef JNI_LOG
-#ifdef ANDROID
+//#ifdef JNI_LOG
+//#ifdef ANDROID
 #include <android/log.h>
 #define lprintf(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
-#else
-#define lprintf(...) printf (__VA_ARGS__)
-#endif /* ANDROID */
-#else
-#define lprintf
-#endif
+//#else
+//#define lprintf(...) printf (__VA_ARGS__)
+//#endif /* ANDROID */
+//#else
+//#define lprintf
+//#endif
 
 class DeleteLocalRef {
 private:
@@ -817,6 +817,12 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			jstring boneNameString = env->NewStringUTF(cBone->mName.C_Str());
 			DeleteLocalRef refNameString(env, boneNameString);
 			if (!setObjectField(env, jBone, "m_name", "Ljava/lang/String;", boneNameString))
+			{
+				return false;
+			}
+			lprintf("Rahul Bone num %d is %s\n", b , cBone->mName.C_Str());
+
+			if (!setIntField(env, jBone, "m_id", b))
 			{
 				return false;
 			}

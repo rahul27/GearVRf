@@ -22,12 +22,14 @@ public class Skeleton {
     private final Matrix4f scratchGlobalInverse;
     private final Matrix4f finalMatrix;
 
+
     public Skeleton(GVRSceneObject sceneObject) {
         this.rootSceneObject = sceneObject;
         boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
         pose = new Pose(sceneObject);
         scratchGlobalInverse = new Matrix4f();
         finalMatrix = new Matrix4f();
+
     }
 
     public Pose getPose() {
@@ -69,6 +71,8 @@ public class Skeleton {
             Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertices().length / 3);
             for (GVRBone bone : mesh.getBones()) {
                 bone.setSceneObject(node);
+
+                Log.d("rahul", "Bone %s is %d", bone.getName(), bone.getId());
 
                 GVRSceneObject skeletalNode = rootSceneObject.getSceneObjectByName(bone.getName());
                 if (skeletalNode == null) {

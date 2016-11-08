@@ -36,6 +36,24 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
     }
 
     /**
+     * Returns the unique id for this bone.
+     *
+     * @return an integer that uniquely identifies this bone.
+     */
+    public int getId() {
+        return mId;
+    }
+
+    /**
+     * Returns the unique id for this bone.
+     *
+     * @param id an integer that uniquely identifies this bone.
+     */
+    public void setId(int id){
+        mId = id;
+    }
+
+    /**
      * Sets the name of the bone.
      * 
      * @param name the name of the bone.
@@ -203,6 +221,11 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         prettyPrint(sb, 0);
         return sb.toString();
     }
+
+    /**
+     * ID that uniquely identifies this bone.
+     */
+    private int mId;
 
     /**
      * Name of the bone.
