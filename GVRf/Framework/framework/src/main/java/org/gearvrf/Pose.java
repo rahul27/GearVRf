@@ -30,6 +30,7 @@ public class Pose {
 
     // temp objects to reduce GC cycles
     private final Vector3f scratchRotationVector;
+    private Skeleton skeleton;
 
 
     private class SceneNode {
@@ -44,8 +45,8 @@ public class Pose {
         private boolean isValid;
         private Vector3f globalPosition;
         private Quaternionf globalRotation;
-        //private Vector3f globalPosition;
-        //private Quaternionf globalRotation;
+        private Vector3f localPosition;
+        private Quaternionf localRotation;
 
         SceneNode(GVRSceneObject sceneObject, SceneNode parent) {
             this.sceneObject = sceneObject;
@@ -56,6 +57,8 @@ public class Pose {
             isValid = true;
             globalPosition = new Vector3f();
             globalRotation = new Quaternionf();
+            localPosition = new Vector3f();
+            localRotation = new Quaternionf();
         }
 
         void setIsValid(boolean isValid) {
@@ -68,7 +71,8 @@ public class Pose {
      *
      * @param sceneObject The corresponding scene object.
      */
-    public Pose(GVRSceneObject sceneObject) {
+    public Pose(Skeleton skeleton, GVRSceneObject sceneObject) {
+        this.skeleton = skeleton;
         this.rootSceneObject = sceneObject;
         nodeByName = new TreeMap<String, SceneNode>();
         //boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
@@ -76,8 +80,13 @@ public class Pose {
 
         //this.rootSceneNode = createTree(sceneObject, null);
         visit(sceneObject);
+
+        //update once
+
         //this.rootSceneNode  = nodeByName.get(sceneObject.getName());
     }
+
+
 
 
 
@@ -89,7 +98,9 @@ public class Pose {
             parent = nodeByName.get(parentNode.getName());
 
         }
-        Log.v("rahul", "Visit %s", node.getName());
+        Log.v("rahul", "Visit %s Parent %s", node.getName() ,  (node.getParent() != null?node
+                .getParent()
+                .getName():null));
         SceneNode internalNode = new SceneNode(node, parent);
         nodeByName.put(node.getName(), internalNode);
 
@@ -113,6 +124,25 @@ public class Pose {
     }
 
 
+    public void updateBoneIndices(){
+        SceneNode rootSceneNode = nodeByName.get(rootSceneObject.getName());
+        updateBoneIndices(rootSceneNode);
+
+    }
+
+    public void updateBoneIndices(SceneNode node){
+        Integer boneIndex = skeleton.boneIndexMap.get(node.sceneObject.getName());
+
+        if (boneIndex != null){
+            GVRBone bone = skeleton.bones.get(boneIndex);
+            skeleton.orderedBones.add(bone);
+        }
+
+        for (SceneNode child : node.children) {
+            updateBoneIndices(child);
+        }
+
+    }
 
     /**
      * Use this call to update all the bone matrices once the new transforms have been set.
@@ -124,6 +154,29 @@ public class Pose {
         SceneNode rootSceneNode = nodeByName.get(rootSceneObject.getName());
         updateTransforms(rootSceneNode, new Matrix4f());
 
+    }
+
+    /**
+     * Use this call to update all the bone matrices once the new transforms have been set.
+     *
+     * Future: Could do this during onDrawFrame()
+     */
+    public void update(String root) {
+        //this is a pose function
+        SceneNode rootSceneNode = nodeByName.get(root);
+        updateTransforms(rootSceneNode, rootSceneNode.sceneObject.getParent().getTransform()
+                .getModelMatrix4f());
+
+    }
+
+
+    public GVRSceneObject getSceneObject(GVRBone bone){
+        SceneNode node = nodeByName.get(bone.getName());
+        if(node != null){
+            return node.sceneObject;
+        }
+
+        return null;
     }
 
 
@@ -207,7 +260,7 @@ public class Pose {
      * @param boneName the name of the corresponding {@link GVRBone} object
      * @param rotation    the new local transform matrix
      */
-    public void updateLocalRotation(String boneName, Quaternionf rotation) {
+    /*public void updateLocalRotation(String boneName, Quaternionf rotation) {
         SceneNode node = nodeByName.get(boneName);
         if(node == null){
             throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
@@ -216,6 +269,45 @@ public class Pose {
         rotation.getEulerAnglesXYZ(scratchRotationVector);
         node.localTransform.setRotationXYZ(scratchRotationVector.x, scratchRotationVector.y,
                 scratchRotationVector.z);
+    }*/
+
+
+    /**
+     * Update the local matrix transform of the provided {@link GVRSceneObject}
+     *
+     * @param boneName the name of the corresponding {@link GVRBone} object
+     * @param rotation    the new local transform matrix
+     */
+    public void updateLocalRotation(String boneName, Quaternionf rotation) {
+        SceneNode node = nodeByName.get(boneName);
+        if(node == null){
+            throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
+        }
+        node.updateStatus = node.updateStatus | UPDATED_LOCAL_TRANSFORM;
+
+        node.localTransform.identity();
+        node.localTransform.rotate(rotation);
+        node.localTransform.setTranslation(node.localPosition);
+
+        //rotation.getEulerAnglesXYZ(scratchRotationVector);
+        //node.localTransform.setRotationXYZ(scratchRotationVector.x, scratchRotationVector.y,
+         //       scratchRotationVector.z);
+    }
+
+    /**
+     * Update the local matrix transform of the provided {@link GVRSceneObject}
+     *
+     * @param boneName the name of the corresponding {@link GVRBone} object
+     * @param rotation    the new local transform matrix
+     */
+    public void updateLocalPosition(String boneName, Vector3f position) {
+        SceneNode node = nodeByName.get(boneName);
+        if(node == null){
+            throw new IllegalArgumentException(String.format("Bone %s not found", boneName));
+        }
+        node.updateStatus = node.updateStatus | UPDATED_LOCAL_TRANSFORM;
+
+        node.localTransform.setTranslation(position);
     }
 
     /**
@@ -266,12 +358,10 @@ public class Pose {
 
         if ((node.updateStatus & UPDATED_LOCAL_TRANSFORM) != 0) {
             //do nothing
-
         } else {
-
-
-                node.localTransform.set(node.sceneObject.getTransform().getLocalModelMatrix4f());
-
+            node.localTransform.set(node.sceneObject.getTransform().getLocalModelMatrix4f());
+            node.localTransform.getUnnormalizedRotation(node.localRotation);
+            node.localTransform.getTranslation(node.localPosition);
         }
 
 

@@ -1,5 +1,7 @@
 package org.gearvrf.animation.keyframe;
 
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +12,7 @@ import org.gearvrf.Pose;
 import org.gearvrf.Skeleton;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
  * Controls skeletal animation (skinning).
@@ -51,13 +54,7 @@ public class GVRSkinningController extends GVRAnimationController {
         for (GVRAnimationChannel channel : animation.mChannels) {
             GVRSceneObject sceneObject = channelToNode.get(i++);
             Matrix4f matrix4f = channel.animate(animationTick);
-            Quaternionf q = new Quaternionf();
             sceneObject.getTransform().setModelMatrix(matrix4f);
-            GVRTransform trans = sceneObject.getTransform();
-            q.set(trans.getRotationX(), trans.getRotationY(), trans.getRotationZ(), trans.getRotationW());
-            q.normalize();
-            pose.updateLocalRotation(sceneObject, q);
-            //pose.updateLocalMatrix(sceneObject, matrix4f);
         }
         skeleton.update();
     }

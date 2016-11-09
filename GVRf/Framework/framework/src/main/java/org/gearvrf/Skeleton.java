@@ -4,6 +4,8 @@ import org.gearvrf.animation.GVRPose;
 import org.gearvrf.animation.GVRSkeleton;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,8 +15,8 @@ import java.util.Map;
 public class Skeleton {
 
     public static final int BONE_LOCK_ROTATION = 1;// lock bone rotation
-    public static final int BONE_ANIMATE = 4;  	// keyframe bone animation
-    public static final int BONE_PHYSICS = 2;  	// use physics to compute bone motion
+    public static final int BONE_ANIMATE = 4;    // keyframe bone animation
+    public static final int BONE_PHYSICS = 2;    // use physics to compute bone motion
 
     private static final String TAG = Skeleton.class.getSimpleName();
     protected Map<GVRSceneObject, List<GVRBone>> boneMap;
@@ -23,17 +25,19 @@ public class Skeleton {
     private final Matrix4f scratchGlobalInverse;
     private final Matrix4f finalMatrix;
     List<GVRBone> bones;
-    protected int[]       mBoneOptions;
+    List<GVRBone> orderedBones;
+    protected int[] mBoneOptions;
     Map<String, Integer> boneIndexMap;
 
     public Skeleton(GVRSceneObject sceneObject) {
         this.rootSceneObject = sceneObject;
         boneMap = new HashMap<GVRSceneObject, List<GVRBone>>();
-        pose = new Pose(sceneObject);
+        pose = new Pose(this, sceneObject);
         scratchGlobalInverse = new Matrix4f();
         finalMatrix = new Matrix4f();
+        bones = new ArrayList<GVRBone>();
+        orderedBones = new ArrayList<GVRBone>();
         boneIndexMap = new HashMap<String, Integer>();
-
     }
 
     public Pose getPose() {
@@ -70,8 +74,18 @@ public class Skeleton {
 
         int mNumBones = bones.size();
         mBoneOptions = new int[mNumBones];
-    }
+        pose.updateBoneIndices();
 
+        boneIndexMap.clear();
+        int index =0;
+        for(GVRBone bone :orderedBones){
+            boneIndexMap.put(bone.getName(), index);
+            index++;
+        }
+        // update once, to generate matrices
+        pose.update();
+    }
+    int boneIndex = 0;
     protected void setupBone(GVRSceneObject node) {
         GVRMesh mesh;
         if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
@@ -81,8 +95,9 @@ public class Skeleton {
 
                 // TODO verify if the list is correctly ordered
                 bones.add(bone);
-                boneIndexMap.put(bone.getName(), bone.getId());
-                Log.d("rahul", "Bone %s is %d", bone.getName(), bone.getId());
+                boneIndexMap.put(bone.getName(), boneIndex);
+                Log.d("rahul", "Bone %s is %d", bone.getName(), boneIndex);
+                boneIndex++;
 
                 GVRSceneObject skeletalNode = rootSceneObject.getSceneObjectByName(bone.getName());
                 if (skeletalNode == null) {
@@ -109,83 +124,123 @@ public class Skeleton {
     public void update() {
         //this is a pose function
         //updateTransforms(rootSceneNode, new Matrix4f());
+         /*
+     * Update the pose based on bone animations.
+     * If any of the bones are animated, they will be marked as changed.
+     */
+
+        //Log.d("rahul", "BL is %d OBL is %s",bones.size(), orderedBones.size());
+        Quaternionf q = new Quaternionf();
+        Vector3f p = new Vector3f();
+        for (int i = 0; i < orderedBones.size(); ++i) {
+            GVRBone bone = orderedBones.get(i);
+            if (bone == null)
+                continue;
+            GVRTransform trans = pose.getSceneObject(bone).getTransform();
+            if ((mBoneOptions[i] & BONE_ANIMATE) != 0) {
+
+                //pose.updateLocalMatrix(bone, trans.getModelMatrix4f());
+                Matrix4f matrix4f = trans.getLocalModelMatrix4f();
+
+                //GVRTransform trans = sceneObject.getTransform();
+                q.set(trans.getRotationX(), trans.getRotationY(), trans.getRotationZ(), trans
+                        .getRotationW());
+                //Vector3f p = new Vector3f();
+                //q.normalize();
+
+                // pose.updateLocalMatrix(bones.get(i), newMatrix4f);
+                pose.updateLocalRotation(orderedBones.get(i).getName(), q);
+                //q.set(trans.getRotationX(), trans.getRotationY(), trans.getRotationZ(), trans
+                //    .getRotationW());
+                //q.normalize();
+                //pose.updateGlobalRotation(bones.get(i).getName(), q);
+                //TO add this
+                /*if (i == 0)
+                {
+                    Matrix4f matrix4f = trans.getModelMatrix4f();
+
+                    p.set(trans.getPositionX(), trans.getPositionY(), trans.getPositionZ());
+                    matrix4f.transformPoint(p,p);
+                //    p.add(mRootOffset);
+                   // pose.updateLocalPosition(bones.get(i).getName(), p);
+
+                }else{
+
+                }*/
+            }
+        }
+        //pose.update(orderedBones.get(0).getName());
         pose.update();
         // this is a skeleton function
-        for (Map.Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet()) {
-            // Transform all bone splits (a bone can be split into multiple instances if they
-            // influence different meshes)
-            //Pose.SceneNode node = nodeByName.get(ent.getKey().getName());
-            for (GVRBone bone : ent.getValue()) {
-                updateBoneMatrices(bone, ent.getKey());
-            }
+        for (int i = 0; i < bones.size(); ++i) {
+            GVRBone bone = bones.get(i);
+            updateBoneMatrices(bone);
         }
     }
 
     /**
      * Set rotation and physics options for this bone
-     * @param boneindex	0 based bone index
-     * @param options	options to control how this bone moves
-     *					BONE_PHYSICS will use physics (rigid body dynamics) to calculate
-     *					the motion of the bone
-     *					BONE_LOCK_ROTATION will lock the bone rotation, freezing its current
-     *					local rotation
      *
+     * @param boneindex 0 based bone index
+     * @param options   options to control how this bone moves
+     *                  BONE_PHYSICS will use physics (rigid body dynamics) to calculate
+     *                  the motion of the bone
+     *                  BONE_LOCK_ROTATION will lock the bone rotation, freezing its current
+     *                  local rotation
      * @see GVRSkeleton.setLocalRotation GVRSkeleton.setWorldRotation
      */
-    public void	 setBoneOptions(int boneindex, int options)
-    {
+    public void setBoneOptions(int boneindex, int options) {
         mBoneOptions[boneindex] = options;
     }
 
     /**
      * Get rotation and physics options for this bone
-     * @param boneindex	0 based bone index
      *
+     * @param boneindex 0 based bone index
      * @see GVRSkeleton.setBoneOptions
      */
-    public int getBoneOptions(int boneindex)
-    {
+    public int getBoneOptions(int boneindex) {
         return mBoneOptions[boneindex];
     }
 
     /**
      * Get rotation and physics options for this bone
-     * @param boneindex	0 based bone index
      *
+     * @param boneindex 0 based bone index
      * @see GVRSkeleton.setBoneOptions
      */
-    public int getBoneOptions(GVRSceneObject sceneObject)
-    {
+    public int getBoneOptions(GVRSceneObject sceneObject) {
         Integer index = boneIndexMap.get(sceneObject.getName());
         return mBoneOptions[index];
     }
 
-
     /**
      * Set rotation and physics options for this bone
-     * @param boneindex	0 based bone index
-     * @param options	options to control how this bone moves
-     *					BONE_PHYSICS will use physics (rigid body dynamics) to calculate
-     *					the motion of the bone
-     *					BONE_LOCK_ROTATION will lock the bone rotation, freezing its current
-     *					local rotation
      *
+     * @param boneindex 0 based bone index
+     * @param options   options to control how this bone moves
+     *                  BONE_PHYSICS will use physics (rigid body dynamics) to calculate
+     *                  the motion of the bone
+     *                  BONE_LOCK_ROTATION will lock the bone rotation, freezing its current
+     *                  local rotation
      * @see GVRSkeleton.setLocalRotation GVRSkeleton.setWorldRotation
      */
-    public void	 setBoneOptions(GVRSceneObject sceneObject, int options)
-    {
+    public void setBoneOptions(GVRSceneObject sceneObject, int options) {
         Integer index = boneIndexMap.get(sceneObject.getName());
+
+        if (index == null) {
+            Log.d("rahul", "No bone found for " + sceneObject.getName());
+            return;
+        }
         mBoneOptions[index] = options;
     }
 
-    protected void updateBoneMatrices(GVRBone bone, GVRSceneObject node) {
+    protected void updateBoneMatrices(GVRBone bone) {
         finalMatrix.set(bone.getOffsetMatrixFloatArray());
 
-        Matrix4f globalTransform = pose.getGlobalMatrix(node.getName());
+        Matrix4f globalTransform = pose.getGlobalMatrix(bone.getName());
 
         globalTransform.mul(finalMatrix, finalMatrix);
-
-
 
         scratchGlobalInverse.set(bone.getSceneObject().getTransform().getModelMatrix());
         scratchGlobalInverse.invert();
