@@ -130,5 +130,6 @@ bool Scene::addLight(Light* light) {
 void Scene::clearLights() {
     lightList.clear();
 }
+
 }
 

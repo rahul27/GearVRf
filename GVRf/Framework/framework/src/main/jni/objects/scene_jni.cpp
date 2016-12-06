@@ -85,6 +85,7 @@ extern "C" {
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeScene_setMainScene(JNIEnv * env, jobject obj, jlong jscene);
+
 };
 
 JNIEXPORT jlong JNICALL
