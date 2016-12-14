@@ -36,10 +36,10 @@ public class GVRPhongLayeredShader extends GVRShaderTemplate
 
     public GVRPhongLayeredShader(GVRContext gvrcontext)
     {
-         super( "float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; " +
+         super( "float u_opacity; float3 u_color; float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; " +
                 "int diffuseTexture1_blendop; int ambientTexture1_blendop; int specularTexture1_blendop; " +
                 "int emissiveTexture1_blendop; int lightmapTexture1_blendop; " +
-                "float3 u_color; float u_opacity; float specular_exponent; float line_width",
+                "float specular_exponent; float line_width",
 
                 "sampler2D ambientTexture; sampler2D diffuseTexture; sampler2D specularTexture; sampler2D opacityTexture; sampler2D lightmapTexture; sampler2D normalTexture; sampler2D emissiveTexture; " +
                 "sampler2D ambientTexture1; sampler2D diffuseTexture1; sampler2D specularTexture1; sampler2D lightmapTexture1; sampler2D emissiveTexture1",
