@@ -432,9 +432,6 @@ namespace gvr {
             GVR_VK_CHECK(!err);
 
 
-            // Bind memory to the image
-            err = vkBindImageMemory(m_device, m_swapchainBuffers[i].image, m_swapchainBuffers[i].mem, 0);
-            GVR_VK_CHECK(!err);
 
             // discover what memory requirements are for this image.
             vkGetImageMemoryRequirements(m_device, m_swapchainBuffers[i].image, &mem_reqs);
