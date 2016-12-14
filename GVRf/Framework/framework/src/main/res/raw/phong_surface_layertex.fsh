@@ -99,17 +99,21 @@ struct Surface
 //
 vec4 BlendColors(vec4 color1, vec4 color2, int blendop)
 {
+    vec4 color;
+
     if (blendop == BLEND_MULTIPLY)
     {
         return color1 * color2;
     }
     if (blendop == BLEND_ADD)
     {
-        return color1 + color2;
+        color = color1 + color2;
+        return clamp(color, 0.0, 1.0);
     }
     if (blendop == BLEND_SUBTRACT)
     {
-        return color1 - color2;
+        color = color1 - color2;
+        return clamp(color, 0.0, 1.0);
     }
     if (blendop == BLEND_DIVIDE)
     {
@@ -117,13 +121,15 @@ vec4 BlendColors(vec4 color1, vec4 color2, int blendop)
     }
     if (blendop == BLEND_SMOOTH_ADD)
     {
-        return (color1 + color2) - (color1 * color2);
+        color = (color1 + color2) - (color1 * color2);
+        return clamp(color, 0.0, 1.0);
     }
     if (blendop == BLEND_SIGNED_ADD)
     {
-        return color1 + (color2 - 0.5);
+        color =  color1 + (color2 - 0.5);
+        return clamp(color, 0.0, 1.0);
     }
-    return color2;
+    return color1;
 }
 
 Surface @ShaderName()
@@ -150,9 +156,9 @@ Surface @ShaderName()
 	diffuse = BlendColors(diffuse, temp, diffuseTexture1_blendop);
 #endif
 #ifdef HAS_opacityTexture
-	diffuse.w *= texture(opacityTexture, opacity_coord.xy).a;
+	diffuse.a *= texture(opacityTexture, opacity_coord.xy).a;
 #endif
-diffuse.xyz *= diffuse.w;
+diffuse.xyz *= diffuse.a;
 #ifdef HAS_specularTexture
 	specular *= texture(specularTexture, specular_coord.xy);
 #endif
