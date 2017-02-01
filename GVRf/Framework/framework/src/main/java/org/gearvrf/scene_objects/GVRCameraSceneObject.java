@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
@@ -53,6 +54,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
     private boolean cameraSetUpStatus;
     private int fpsMode = -1;
     private boolean isCameraOpen = false;
+    private CameraActivityEvents cameraActivityEvents;
 
     /**
      * Create a {@linkplain GVRSceneObject scene object} (with arbitrarily
@@ -118,7 +120,8 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
         }
 
         gvrContext.registerDrawFrameListener(this);
-        gvrContext.getActivity().getEventReceiver().addListener(activityEvents);
+        cameraActivityEvents = new CameraActivityEvents();
+        gvrContext.getActivity().getEventReceiver().addListener(cameraActivityEvents);
     }
 
     /**
@@ -196,7 +199,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
         isCameraOpen = false;
     }
 
-    private IActivityEvents activityEvents = new IActivityEvents() {
+    private class CameraActivityEvents extends GVREventListeners.ActivityEvents {
         @Override
         public void onPause() {
             mPaused = true;
@@ -211,42 +214,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
             }
             mPaused = false;
         }
-
-        @Override
-        public void onDestroy() {
-
-        }
-
-        @Override
-        public void onSetMain(GVRMain script) {
-
-        }
-
-        @Override
-        public void onWindowFocusChanged(boolean hasFocus) {
-
-        }
-
-        @Override
-        public void onConfigurationChanged(Configuration config) {
-
-        }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        }
-
-        @Override
-        public void onTouchEvent(MotionEvent event) {
-
-        }
-
-        @Override
-        public void dispatchTouchEvent(MotionEvent event) {
-
-        }
-    };
+    }
 
     /**
      * Resumes camera preview
@@ -280,6 +248,9 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
     public void close() {
         closeCamera();
         gvrContext.unregisterDrawFrameListener(this);
+        if(cameraActivityEvents != null){
+            gvrContext.getActivity().getEventReceiver().removeListener(cameraActivityEvents);
+        }
     }
 
     @Override
