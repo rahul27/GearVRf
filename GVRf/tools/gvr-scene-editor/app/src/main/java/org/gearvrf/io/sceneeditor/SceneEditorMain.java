@@ -22,6 +22,8 @@ import android.opengl.GLES20;
 import android.os.Environment;
 import android.view.Gravity;
 
+import com.device.ximmerse.XimmerseDevice;
+
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
@@ -34,6 +36,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.IAssetEvents;
 import org.gearvrf.io.cursor3d.Cursor;
+import org.gearvrf.io.cursor3d.CursorEvent;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.MovableBehavior;
 import org.gearvrf.io.cursor3d.SelectableBehavior;
@@ -87,15 +90,19 @@ public class SceneEditorMain extends GVRMain {
     private GVRSphereSceneObject environmentSphere;
     private GVRSceneObject environmentSceneObject;
     private String currentModel;
+    private XimmerseDevice ximmerseDevice;
 
     @Override
     public void onInit(GVRContext gvrContext) {
         this.gvrContext = gvrContext;
         this.resources = gvrContext.getContext().getResources();
-        mainScene = gvrContext.getNextMainScene();
+        mainScene = gvrContext.getMainScene();
         mainScene.getMainCameraRig().getLeftCamera().setBackgroundColor(Color.DKGRAY);
         mainScene.getMainCameraRig().getRightCamera().setBackgroundColor(Color.DKGRAY);
-        cursorManager = new CursorManager(gvrContext, mainScene);
+
+        ximmerseDevice = new XimmerseDevice(gvrContext, mainScene);
+
+        cursorManager = new CursorManager(gvrContext, mainScene, ximmerseDevice.getDeviceList());
         editableBehavior = new EditableBehavior(cursorManager, mainScene, detachListener);
         sceneSerializer = new SceneSerializer();
         menuSceneObjects = new LinkedList<GVRSceneObject>();
@@ -340,6 +347,10 @@ public class SceneEditorMain extends GVRMain {
         }
     }
 
+    void onDestroy() {
+        ximmerseDevice.close();
+    }
+
     private EditableBehavior.DetachListener detachListener = new DetachListener() {
         @Override
         public void onDetach() {
@@ -361,7 +372,7 @@ public class SceneEditorMain extends GVRMain {
         public void onStateChanged(final SelectableBehavior behavior, ObjectState prev,
                                    ObjectState current, Cursor cursor) {
             if (prev == ObjectState.CLICKED) {
-                long currentTimeStamp = System.currentTimeMillis();
+              /*  long currentTimeStamp = System.currentTimeMillis();
                 if (prevClickTimeStamp != 0 && (currentTimeStamp - prevClickTimeStamp) <
                         CLICK_THRESHOLD) {
                     if (behavior.getOwnerObject().getComponent(EditableBehavior.getComponentType
@@ -372,7 +383,7 @@ public class SceneEditorMain extends GVRMain {
                         setMenuVisibility(false);
                     }
                 }
-                prevClickTimeStamp = System.currentTimeMillis();
+                prevClickTimeStamp = System.currentTimeMillis();*/
             }
 
             if (current == ObjectState.BEHIND) {

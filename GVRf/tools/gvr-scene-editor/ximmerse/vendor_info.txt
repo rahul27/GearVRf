@@ -1,0 +1,14 @@
+Devices:
+
+1) name="Left controller"
+   deviceId="ximmerse_0"
+   vendorId="1234"
+   productId="5678"
+   vendorName="Ximmerse"
+
+2) name="Right controller"
+   deviceId="ximmerse_1"
+   vendorId="1234"
+   productId="5678"
+   vendorName="Ximmerse"
+

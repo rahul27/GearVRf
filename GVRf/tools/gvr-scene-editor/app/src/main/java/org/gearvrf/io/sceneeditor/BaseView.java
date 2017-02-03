@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -144,7 +145,8 @@ abstract class BaseView {
             List<KeyEvent> keyEvents = event.getCursorController().getKeyEvents();
             List<MotionEvent> motionEvents = event.getCursorController().getMotionEvents();
 
-            if (scrollable) {
+
+            if (!motionEvents.isEmpty() && scrollable) {
                 for (MotionEvent motionEvent : motionEvents) {
                     if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
                         pointerCoords.x = savedHitPointX

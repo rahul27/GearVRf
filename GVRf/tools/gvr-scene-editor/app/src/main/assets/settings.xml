@@ -100,10 +100,29 @@
             position="center"
             themeId="crystal_sphere"
             type="object">
-        <io deviceId="mouse"
+        <io deviceId="ximmerse-0"
             priority="1"
-            productId="0"
-            vendorId="0"/>
+            productId="5678"
+            vendorId="1234"/>
+        <io deviceId="android_gamepad"
+            priority="2"
+            productId="1"
+            vendorId="1"/>
+        <io deviceId="gearvr"
+            priority="3"
+            productId="42240"
+            vendorId="1256"/>
+    </cursor>
+
+    <cursor name="Object Cursor"
+            active="yes"
+            position="center"
+            themeId="crystal_sphere"
+            type="object">
+        <io deviceId="ximmerse-1"
+            priority="1"
+            productId="5678"
+            vendorId="1234"/>
         <io deviceId="android_gamepad"
             priority="2"
             productId="1"

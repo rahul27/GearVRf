@@ -18,28 +18,33 @@ package org.gearvrf.io.sceneeditor;
 import android.os.Bundle;
 
 import org.gearvrf.GVRActivity;
-import org.gearvrf.utility.Log;
 
 public class SceneEditorActivity extends GVRActivity {
     private static final String TAG = SceneEditorActivity.class.getSimpleName();
-    private SceneEditorMain cursorMain;
+    private SceneEditorMain sceneEditorMain;
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        cursorMain = new SceneEditorMain();
-        setMain(cursorMain, "gvr.xml");
+        sceneEditorMain = new SceneEditorMain();
+        setMain(sceneEditorMain, "gvr.xml");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        cursorMain.saveState();
+        sceneEditorMain.saveState();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        cursorMain.close();
+        sceneEditorMain.close();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sceneEditorMain.onDestroy();
     }
 }

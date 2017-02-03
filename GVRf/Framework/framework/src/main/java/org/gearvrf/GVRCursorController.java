@@ -57,7 +57,7 @@ public abstract class GVRCursorController {
     private boolean active;
     private float nearDepth, farDepth = -Float.MAX_VALUE;
     private final Vector3f position, ray;
-    private boolean enable = true;
+    private boolean enable = false;
     private List<KeyEvent> keyEvent;
     private List<KeyEvent> processedKeyEvent;
     private List<MotionEvent> motionEvent;
