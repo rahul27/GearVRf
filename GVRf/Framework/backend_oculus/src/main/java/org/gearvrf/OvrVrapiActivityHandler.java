@@ -140,6 +140,8 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     @Override
     public void setViewManager(GVRViewManager viewManager) {
         mViewManager = (OvrViewManager)viewManager;
+        OvrGearController controller = new OvrGearController(viewManager);
+        nativeInitializeGearController(mPtr, controller.getPtr());
     }
 
     @Override
@@ -441,6 +443,8 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     private static native int nativeInitializeVrApi(long ptr);
 
     private static native int nativeUninitializeVrApi(long ptr);
+
+    private static native void nativeInitializeGearController(long ptr, long controllerPtr);
 
     private static final int VRAPI_INITIALIZE_SUCCESS = 0;
     private static final int VRAPI_INITIALIZE_UNKNOWN_ERROR = -1;

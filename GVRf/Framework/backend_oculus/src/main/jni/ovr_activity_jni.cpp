@@ -100,6 +100,13 @@ JNIEXPORT jboolean JNICALL Java_org_gearvrf_GVRConfigurationManager_nativeUsingM
     return activity->usingMultiview();
 }
 
+JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeInitializeGearController
+        (JNIEnv* jni, jclass clazz, jlong appPtr, jlong controllerPtr) {
+    GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+    GearController *gearController = reinterpret_cast<GearController*>(controllerPtr);
+    activity->setGearController(gearController);
+}
+
 } //extern "C" {
 
 } //namespace gvr
