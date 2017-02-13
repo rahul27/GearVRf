@@ -3,7 +3,9 @@ package org.gearvrf.io.cursor3d;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTransform;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -26,6 +28,8 @@ public class MovableBehavior extends SelectableBehavior {
     private CursorManager cursorManager;
     private GVRSceneObject ownerObject;
     private GVRSceneObject ownerParent;
+    private static final Matrix4f cursorModelMatrix = new Matrix4f();
+    private static final Matrix4f selectedModelMatrix = new Matrix4f();
 
     /**
      * Creates a {@link MovableBehavior} to be attached to any {@link GVRSceneObject}. The
@@ -106,7 +110,8 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickEvent(CursorEvent event) {
-       synchronized (selectedLock) {
+        super.handleClickEvent(event);
+        synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor
                 return;
@@ -117,14 +122,14 @@ public class MovableBehavior extends SelectableBehavior {
             prevCursorPosition.set(cursor.getPositionX(), cursor.getPositionY(), cursor
                     .getPositionZ());
             selected = getOwnerObject();
-            if (cursor.getCursorType() == CursorType.OBJECT) {
-                Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY(),
-                        cursor.getPositionZ());
 
-                selected.getTransform().setPosition(-position.x + selected.getTransform()
-                        .getPositionX(), -position.y + selected.getTransform()
-                        .getPositionY(), -position.z + selected.getTransform().getPositionZ());
+            if (cursor.getCursorType() == CursorType.OBJECT) {
                 ownerParent = selected.getParent();
+                GVRTransform selectedTransform = selected.getTransform();
+                cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
+                cursorModelMatrix.invert();
+                selectedModelMatrix.set(selectedTransform.getModelMatrix());
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
                 ownerParent.removeChildObject(selected);
                 cursorSceneObject.addChildObject(selected);
             }
@@ -133,6 +138,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleDragEvent(CursorEvent event) {
+        super.handleDragEvent(event);
         if (cursor.getCursorType() == CursorType.LASER && cursor == event.getCursor()) {
             Cursor cursor = event.getCursor();
             Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor.getPositionY
@@ -144,6 +150,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleCursorLeave(CursorEvent event) {
+        super.handleCursorLeave(event);
         if (event.isActive() && cursor == event.getCursor()) {
             if (cursor.getCursorType() == CursorType.LASER) {
                 Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor
@@ -158,6 +165,7 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickReleased(CursorEvent event) {
+        super.handleClickReleased(event);
         synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor
@@ -165,13 +173,12 @@ public class MovableBehavior extends SelectableBehavior {
             }
 
             if (selected != null && cursor.getCursorType() == CursorType.OBJECT) {
-                Vector3f position = new Vector3f(cursor.getPositionX(), cursor.getPositionY
-                        (), cursor.getPositionZ());
+                GVRTransform selectedTransform = selected.getTransform();
+                cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
                 cursorSceneObject.removeChildObject(selected);
                 ownerParent.addChildObject(selected);
-                selected.getTransform().setPosition(+position.x + selected.getTransform()
-                        .getPositionX(), +position.y + selected.getTransform()
-                        .getPositionY(), +position.z + selected.getTransform().getPositionZ());
+                selectedModelMatrix.set(selectedTransform.getModelMatrix());
+                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
             }
             selected = null;
             // object has been moved, invalidate all other cursors to check for events
@@ -217,10 +224,11 @@ public class MovableBehavior extends SelectableBehavior {
     }
 
     /**
-     *  Returns a unique long value associated with the {@link MovableBehavior} class. Each
-     *  subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
-     *  get the instance of {@link MovableBehavior} attached to any {@link GVRSceneObject}
-     *  using {@link GVRSceneObject#getComponent(long)}
+     * Returns a unique long value associated with the {@link MovableBehavior} class. Each
+     * subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
+     * get the instance of {@link MovableBehavior} attached to any {@link GVRSceneObject}
+     * using {@link GVRSceneObject#getComponent(long)}
+     *
      * @return the component type value.
      */
     public static long getComponentType() {
