@@ -17,6 +17,7 @@ APP_ABI := armeabi-v7a
 APP_PLATFORM := android-19
 APP_STL := gnustl_static
 NDK_TOOLCHAIN_VERSION := 4.9
+APP_ALLOW_MISSING_DEPS := true
 ifndef OVR_MOBILE_SDK
    	OVR_MOBILE_SDK=../../../../../ovr_sdk_mobile
 endif
