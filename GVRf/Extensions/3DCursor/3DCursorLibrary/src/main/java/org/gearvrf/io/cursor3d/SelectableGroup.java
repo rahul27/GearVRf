@@ -18,7 +18,6 @@ class SelectableGroup extends GVRComponent {
     static private long TYPE_SELECTABLE_GROUP = ((long) SelectableGroup.class.hashCode() << 32) &
             (System.currentTimeMillis() & 0xffffffff);
     private GVRSceneObject parent;
-    Set<GVRSceneObject> intersectingList = new HashSet<GVRSceneObject>();
 
     protected SelectableGroup(GVRContext gvrContext, GVRSceneObject sceneObject) {
         super(gvrContext, 0);

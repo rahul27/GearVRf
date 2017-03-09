@@ -110,7 +110,6 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickEvent(CursorEvent event) {
-        super.handleClickEvent(event);
         synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor
@@ -138,7 +137,6 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleDragEvent(CursorEvent event) {
-        super.handleDragEvent(event);
         if (cursor.getCursorType() == CursorType.LASER && cursor == event.getCursor()) {
             Cursor cursor = event.getCursor();
             Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor.getPositionY
@@ -150,7 +148,6 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleCursorLeave(CursorEvent event) {
-        super.handleCursorLeave(event);
         if (event.isActive() && cursor == event.getCursor()) {
             if (cursor.getCursorType() == CursorType.LASER) {
                 Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor
@@ -165,7 +162,6 @@ public class MovableBehavior extends SelectableBehavior {
 
     @Override
     void handleClickReleased(CursorEvent event) {
-        super.handleClickReleased(event);
         synchronized (selectedLock) {
             if (selected != null && cursor != event.getCursor()) {
                 // We have a selected object but not the correct cursor

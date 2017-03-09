@@ -28,12 +28,14 @@ import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 class ObjectCursor extends Cursor {
     private static final String TAG = ObjectCursor.class.getSimpleName();
     private static final float POINT_CURSOR_NEAR_DEPTH = -1.0f;
+    private static final float[] EMPTY_HIT_POINT = new float[3];
     private Set<GVRSceneObject> intersecting;
 
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
@@ -44,27 +46,17 @@ class ObjectCursor extends Cursor {
     @Override
     void dispatchSensorEvent(SensorEvent event) {
         GVRSceneObject object = event.getObject();
+
         GVRCursorController controller = event.getCursorController();
         isControllerActive = event.isActive();
         boolean colliding = false;
 
-        SelectableGroup selectableBehavior = (SelectableGroup) object.getComponent
+        SelectableGroup selectableGroup = (SelectableGroup) object.getComponent
                 (SelectableGroup.getComponentType());
-        if (selectableBehavior != null) {
-            if (isColliding(object) && event.isOver()) {
-                colliding = true;
-            }
-            if (colliding) {
-                selectableBehavior.intersectingList.add(object);
-            } else {
-                selectableBehavior.intersectingList.remove(object);
-                if (!selectableBehavior.intersectingList.isEmpty() && event.isOver()) {
-                    colliding = true;
-                } else {
-                    colliding = false;
-                }
-            }
-            object = selectableBehavior.getParent();
+
+        if (selectableGroup != null) {
+            object = selectableGroup.getParent();
+            colliding = isColliding(object);
         } else {
             if (isColliding(object) && event.isOver()) {
                 colliding = true;
@@ -77,19 +69,33 @@ class ObjectCursor extends Cursor {
 
         if (object != null && colliding) {
             createAndSendCursorEvent(object, true, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), true, isControllerActive,
+                    event.getHitZ(), true, event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         } else {
             createAndSendCursorEvent(object, false, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), event.isOver(), isControllerActive,
+                    event.getHitZ(), event.isOver(), event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         }
     }
 
     @Override
     ControllerEventListener getControllerEventListener() {
-        // not used
-        return null;
+        return new ControllerEventListener() {
+            @Override
+            public void onEvent(GVRCursorController gvrCursorController) {
+                KeyEvent keyEvent = gvrCursorController.getKeyEvent();
+                for (Iterator<GVRSceneObject> iterator = intersecting.iterator(); iterator
+                        .hasNext(); ) {
+                    GVRSceneObject sceneObject = iterator.next();
+                    if (!isColliding(sceneObject)) {
+                        iterator.remove();
+                        createAndSendCursorEvent(sceneObject, false, EMPTY_HIT_POINT[0],
+                                EMPTY_HIT_POINT[1],
+                                EMPTY_HIT_POINT[2], false, isControllerActive, keyEvent, null);
+                    }
+                }
+            }
+        };
     }
 
     private void createAndSendCursorEvent(GVRSceneObject sceneObject, boolean colliding, float
@@ -121,7 +127,6 @@ class ObjectCursor extends Cursor {
                 checkAndSetAsset(Action.INTERSECT);
             }
         } else {
-
             checkAndSetAsset(Action.DEFAULT);
         }
 
