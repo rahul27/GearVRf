@@ -88,7 +88,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
 
     @Override
     public void onDrawFrame(float frameTime) {
-        thread.invalidate();
+        thread.updatePosition();
     }
 
     static class GVRMouseController extends GVRBaseController {
@@ -258,7 +258,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
     private class EventHandlerThread extends HandlerThread {
         private static final int MOTION_EVENT = 0;
         private static final int KEY_EVENT = 1;
-        private static final int INVALIDATE = 2;
+        private static final int UPDATE_POSITION = 2;
         private Handler handler;
 
         EventHandlerThread(String name) {
@@ -282,7 +282,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
                             KeyEvent keyEvent = (KeyEvent) msg.obj;
                             dispatchKeyEvent(id, keyEvent);
                             break;
-                        case INVALIDATE:
+                        case UPDATE_POSITION:
                             for(int i =0; i< controllers.size();i++){
                                 GVRMouseController controller = controllers.valueAt(i);
                                 controller.updatePosition();
@@ -294,9 +294,9 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
             };
         }
 
-        void invalidate(){
+        void updatePosition(){
             if(threadStarted){
-                Message message = Message.obtain(null, INVALIDATE);
+                Message message = Message.obtain(null, UPDATE_POSITION);
                 handler.sendMessage(message);
             }
         }
