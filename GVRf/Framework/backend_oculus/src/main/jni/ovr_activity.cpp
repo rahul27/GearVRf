@@ -118,7 +118,9 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         parms.Flags |=ResetWindowFullscreen;
 
         oculusMobile_ = vrapi_EnterVrMode(&parms);
-        gearController->setOvrMobile(oculusMobile_);
+        if (gearController != nullptr) {
+            gearController->setOvrMobile(oculusMobile_);
+        }
 
         oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
         configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
@@ -222,7 +224,7 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     FrameBufferObject::unbind();
 
     // check if the controller is available
-    if(gearController->findConnectedGearController()) {
+    if (gearController != nullptr && gearController->findConnectedGearController()) {
         // collect the controller input if available
         gearController->onFrame(predictedDisplayTime);
     }

@@ -20,6 +20,7 @@ import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 
 import org.gearvrf.io.CursorControllerListener;
@@ -50,7 +51,7 @@ import java.nio.FloatBuffer;
  * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
  * notification whenever the controller information is updated.
  */
-public class OvrGearController extends GVRCursorController implements GVRDrawFrameListener {
+public class OvrGearController extends GVRCursorController {
     private static final String TAG = OvrGearController.class.getSimpleName();
 
     private static final int DATA_SIZE = 12;
@@ -89,8 +90,8 @@ public class OvrGearController extends GVRCursorController implements GVRDrawFra
         this.context = context;
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
-        context.registerDrawFrameListener(this);
     }
+
 
     long getPtr() {
         return mPtr;
@@ -98,12 +99,23 @@ public class OvrGearController extends GVRCursorController implements GVRDrawFra
 
     @Override
     public void setSceneObject(GVRSceneObject object) {
-        context.getMainScene().addSceneObject(pivot);
+        if(pivot.getParent() != context.getMainScene().getRoot()) {
+            context.getMainScene().addSceneObject(pivot);
+        }
         pivot.addChildObject(object);
     }
 
     @Override
-    public void onDrawFrame(float frameTime) {
+    public void resetSceneObject() {
+        if(pivot.getParent() == context.getMainScene().getRoot()) {
+            context.getMainScene().removeSceneObject(pivot);
+        }
+        for(GVRSceneObject child : pivot.getChildren()){
+            pivot.removeChildObject(child);
+        }
+    }
+
+    void onDrawFrame() {
         boolean connected = readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
         if (connected) {
             if (!initialized) {
@@ -199,6 +211,11 @@ public class OvrGearController extends GVRCursorController implements GVRDrawFra
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
+        if (initialized) {
+            thread.uninitialize();
+            thread.quitSafely();
+            initialized = false;
+        }
         OvrNativeGearController.delete(mPtr);
     }
 

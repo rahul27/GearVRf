@@ -25,24 +25,23 @@ namespace gvr {
     extern "C" {
 
     JNIEXPORT jlong JNICALL Java_org_gearvrf_OvrNativeGearController_ctor(JNIEnv *env,
-                                                                          jobject obj, jobject
+                                                                          jclass clazz, jobject
                                                                           jreadback_buffer);
 
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrNativeGearController_delete(JNIEnv *env,
-                                                                           jobject obj,
+                                                                           jclass clazz,
                                                                            jlong jController);
 
     JNIEXPORT jlong JNICALL Java_org_gearvrf_OvrNativeGearController_ctor(JNIEnv *env,
-                                                                          jobject obj, jobject
+                                                                          jclass clazz, jobject
                                                                           jreadback_buffer) {
         float *data = (float *) env->GetDirectBufferAddress(jreadback_buffer);
         return reinterpret_cast<jlong>(new GearController(data));
     }
 
-    JNIEXPORT void JNICALL Java_org_gearvrf_NativeConfigurationManager_delete(JNIEnv *env,
-                                                                              jobject obj,
-                                                                              jlong
-                                                                              jController) {
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrNativeGearController_delete(JNIEnv *env,
+                                                                           jclass clazz,
+                                                                           jlong jController) {
         delete reinterpret_cast<GearController *>(jController);
     }
     }

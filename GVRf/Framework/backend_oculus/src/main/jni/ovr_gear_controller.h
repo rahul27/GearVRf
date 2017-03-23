@@ -24,17 +24,20 @@
 
 namespace gvr {
     class GearController {
+
     private:
         ovrDeviceID RemoteDeviceID;
-        uint8_t LastRecenterCount;
         ovrMobile *ovrMobile_;
         float *orientationTrackingReadbackBuffer;
-        static const int CONNECTED = 1.0f;
-        static const int DISCONNECTED = 1.0f;
+        static const int CONNECTED = 1;
+        static const int DISCONNECTED = 0;
+
     public :
+
         GearController(float *orientationTrackingReadbackBuffer) {
             this->orientationTrackingReadbackBuffer = orientationTrackingReadbackBuffer;
         }
+
 
         void setOvrMobile(ovrMobile *ovrMobile) {
             this->ovrMobile_ = ovrMobile;

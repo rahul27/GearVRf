@@ -65,9 +65,6 @@ namespace gvr {
             remoteInputState.Header.ControllerType = ovrControllerType_TrackedRemote;
             result = vrapi_GetCurrentInputState(ovrMobile_, RemoteDeviceID, &remoteInputState
                     .Header);
-            if (result == ovrSuccess) {
-                LastRecenterCount = remoteInputState.RecenterCount;
-            }
         }
         vrapi_RecenterInputPose(ovrMobile_, RemoteDeviceID);
     }
@@ -75,6 +72,7 @@ namespace gvr {
     void GearController::onControllerDisconnected(const ovrDeviceID deviceID) {
         // not used at the moment
     }
+
 
     void GearController::onFrame(double predictedDisplayTime) {
         ovrTracking tracking;
