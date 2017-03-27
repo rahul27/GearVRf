@@ -968,12 +968,14 @@ public class CursorManager {
                     Cursor cursor = cursorIterator.next();
 
                     if (cursor.getIoDevice().equals(removedIoDevice)) {
-                        cursor.resetIoDevice(removedIoDevice);
-                        cursorIterator.remove();
-                        unusedCursors.add(cursor);
                         if (scene != null) {
                             removeCursorFromScene(cursor);
                         }
+
+                        cursor.resetIoDevice(removedIoDevice);
+                        cursorIterator.remove();
+                        unusedCursors.add(cursor);
+
                         for (CursorActivationListener listener : activationListeners) {
                             listener.onDeactivated(cursor);
                         }
