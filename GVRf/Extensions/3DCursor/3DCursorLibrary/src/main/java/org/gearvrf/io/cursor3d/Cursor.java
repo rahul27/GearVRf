@@ -649,7 +649,8 @@ public abstract class Cursor {
 
     protected void handleControllerEvent(GVRCursorController controller, boolean sentEvent) {
         lookAt();
-        if (!controller.isEventHandledBySensorManager() && !sentEvent &&
+        if (cursorManager.isDepthOrderEnabled() &&
+                !controller.isEventHandledBySensorManager() && !sentEvent &&
                 (controller.getKeyEvent() != null || controller.getMotionEvents().size() > 0)) {
             CursorEvent cursorEvent = CursorEvent.obtain();
             cursorEvent.setOver(false);
