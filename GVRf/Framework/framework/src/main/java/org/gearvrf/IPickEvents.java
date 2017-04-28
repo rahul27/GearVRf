@@ -38,13 +38,15 @@ public interface IPickEvents extends IEvents {
      * @param sceneObj scene object picked
      * @param collision information about the collision
      */
-    void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
+    //TODO javadocs
+    void onPickEnter(GVRSceneObject sceneObj, GVRPicker picker, GVRPicker.GVRPickedObject
+            collision);
     
     /**
      * Called when the pick ray first exits a scene object.
      * @param sceneObj scene object no longer picked.
      */    
-    void onExit(GVRSceneObject sceneObj);
+    void onPickExit(GVRSceneObject sceneObj, GVRPicker picker);
     
     /**
      * Called while the pick ray penetrates a scene object.

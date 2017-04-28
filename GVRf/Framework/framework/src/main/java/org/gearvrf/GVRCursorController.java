@@ -47,8 +47,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Use the {@link GVRInputManager#addCursorController(GVRCursorController)} call
  * to add an external {@link GVRCursorController} to the framework.
  */
-public abstract class GVRCursorController {
+public abstract class GVRCursorController extends GVRComponent {
     private static final String TAG = GVRCursorController.class.getSimpleName();
+    static private long TYPE_CONTROLLER= newComponentType(GVRCursorController.class);
     private static int uniqueControllerId = 0;
     private final int controllerId;
     private final GVRControllerType controllerType;
@@ -62,14 +63,15 @@ public abstract class GVRCursorController {
     private List<KeyEvent> processedKeyEvent;
     private List<MotionEvent> motionEvent;
     private List<MotionEvent> processedMotionEvent;
-    private GVRSceneObject sceneObject;
+    //private GVRSceneObject sceneObject;
     private Object sceneObjectLock = new Object();
     private Object eventLock = new Object();
     private List<ControllerEventListener> controllerEventListeners;
 
     private String name;
     private int vendorId, productId;
-    private final SensorManager sensorManager;
+    //private final SensorManager sensorManager;
+    private GVRPicker picker;
     private GVRScene scene;
 
     /**
@@ -81,8 +83,8 @@ public abstract class GVRCursorController {
      *
      * @param controllerType the type of this {@link GVRCursorController}.
      */
-    public GVRCursorController(GVRControllerType controllerType) {
-        this(controllerType, null);
+    public GVRCursorController(GVRContext context, GVRControllerType controllerType) {
+        this(context, controllerType, null);
     }
 
     /**
@@ -95,8 +97,8 @@ public abstract class GVRCursorController {
      * @param controllerType the type of this {@link GVRCursorController}.
      * @param name           the name for this {@link GVRCursorController}
      */
-    public GVRCursorController(GVRControllerType controllerType, String name) {
-        this(controllerType, name, 0, 0);
+    public GVRCursorController(GVRContext context, GVRControllerType controllerType, String name) {
+        this(context, controllerType, name, 0, 0);
     }
 
     /**
@@ -107,8 +109,11 @@ public abstract class GVRCursorController {
      * @param vendorId       the vendor id for this {@link GVRCursorController}
      * @param productId      the product id for this {@link GVRCursorController}
      */
-    public GVRCursorController(GVRControllerType controllerType, String name,
+    //TODO update Javadoc
+    public GVRCursorController(GVRContext context, GVRControllerType controllerType, String name,
                                int vendorId, int productId) {
+        super(context,0);
+        mType = getComponentType();
         this.controllerId = uniqueControllerId;
         this.controllerType = controllerType;
         this.name = name;
@@ -123,7 +128,7 @@ public abstract class GVRCursorController {
         motionEvent = new ArrayList<MotionEvent>();
         processedMotionEvent = new ArrayList<MotionEvent>();
         controllerEventListeners = new CopyOnWriteArrayList<ControllerEventListener>();
-        sensorManager = SensorManager.getInstance();
+        //sensorManager = SensorManager.getInstance();
     }
 
     /**
@@ -165,6 +170,10 @@ public abstract class GVRCursorController {
         update();
     }
 
+    boolean getActive(){
+        return active;
+    }
+
     /**
      * Set a {@link GVRSceneObject} to be controlled by the
      * {@link GVRCursorController}.
@@ -173,8 +182,18 @@ public abstract class GVRCursorController {
      */
     public void setSceneObject(GVRSceneObject object) {
         synchronized (sceneObjectLock) {
+            //TODO throw exception if not present
+            //picker = (GVRPicker) object.getComponent(GVRPicker.getComponentType());
+            if(picker == null){
+                Log.d(TAG, "Attaching object picker "+ getControllerType());
+                picker = new GVRPicker(getGVRContext(), scene);
+            }
+            // we want to manually involve a pick
+            //picker.setEnable(false);
+
             if (object != null) {
                 Vector3f objectPosition = position;
+                GVRSceneObject sceneObject = getOwnerObject();
                 if (sceneObject != null) {
                     // if there is already an attached scene object transfer the
                     // position to the new one
@@ -186,7 +205,9 @@ public abstract class GVRCursorController {
                 object.getTransform().setPosition(objectPosition.x,
                         objectPosition.y, objectPosition.z);
             }
-            sceneObject = object;
+            object.attachComponent(this);
+            setOwnerObject(object);
+            //object.attachComponent(picker);
         }
     }
 
@@ -206,7 +227,7 @@ public abstract class GVRCursorController {
      */
     public GVRSceneObject getSceneObject() {
         synchronized (sceneObjectLock) {
-            return sceneObject;
+            return getOwnerObject();
         }
     }
 
@@ -418,11 +439,12 @@ public abstract class GVRCursorController {
         }
 
         position.set(x, y, z);
-        if (sceneObject != null) {
+        GVRSceneObject ownerObject = getOwnerObject();
+        if (ownerObject != null) {
             synchronized (sceneObjectLock) {
                 // if there is an attached scene object then use its absolute
                 // position.
-                sceneObject.getTransform().setPosition(x, y, z);
+                ownerObject.getTransform().setPosition(x, y, z);
             }
         }
         update();
@@ -580,7 +602,15 @@ public abstract class GVRCursorController {
 
     protected void setScene(GVRScene scene){
         this.scene = scene;
+
+        if(picker != null){
+            picker.setScene(scene);
+        }else{
+            picker = new GVRPicker(getGVRContext(), scene);
+        }
+
     }
+
 
     private boolean eventHandledBySensor = false;
 
@@ -596,6 +626,9 @@ public abstract class GVRCursorController {
     public boolean isEventHandledBySensorManager() {
         return eventHandledBySensor;
     }
+
+    static public long getComponentType() { return TYPE_CONTROLLER; }
+
 
     /**
      * Process the input data.
@@ -619,10 +652,17 @@ public abstract class GVRCursorController {
 
         previousActive = active;
         position.normalize(ray);
-        eventHandledBySensor = sensorManager.processPick(scene, this);
+        //eventHandledBySensor = sensorManager.processPick(scene, this);
         for (ControllerEventListener listener : controllerEventListeners) {
             listener.onEvent(this);
         }
+
+        if(picker!= null) {
+           //picker.doPick();
+        }
+        //sensorManager.processPick(scene, this);
+
+
         // reset the set key and motion events.
         synchronized (eventLock) {
             processedKeyEvent.clear();

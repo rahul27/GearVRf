@@ -238,6 +238,14 @@ public class GVRComponent extends GVRHybridObject {
      * Called when a component is disabled.
      */
     public void onDisable() { }
+
+    static protected long newComponentType(Class clazz)
+    {
+        long hash = (long) clazz.hashCode() << 32;
+        long t = ((long) System.currentTimeMillis() & 0xfffffff);
+        long result = hash | t;
+        return result;
+    }
 }
 
 class NativeComponent {

@@ -122,7 +122,8 @@ class GVRGamepadDeviceManager {
         public GVRGamepadController(GVRContext context,
                                     GVRControllerType controllerType, String name, int vendorId,
                                     int productId, GVRGamepadDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
+            super(context, controllerType, name, vendorId, productId);
+
             this.context = context;
             internalObject = new GVRSceneObject(context);
             internalObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);

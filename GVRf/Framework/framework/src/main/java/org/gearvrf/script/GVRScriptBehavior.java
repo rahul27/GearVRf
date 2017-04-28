@@ -206,7 +206,8 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
         invokeFunction("onStep", noargs);
     }
 
-    public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject hit)
+    public void onPickEnter(GVRSceneObject sceneObj, GVRPicker picker, GVRPicker.GVRPickedObject
+            hit)
     {
          if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickEnter", new Object[] { sceneObj, hit }))
          {
@@ -218,7 +219,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
          }
     }
 
-    public void onExit(GVRSceneObject sceneObj)
+    public void onPickExit(GVRSceneObject sceneObj, GVRPicker picker)
     {
         if ((sceneObj == getOwnerObject()) && !invokeFunction("onPickExit", new Object[] { sceneObj }))
         {

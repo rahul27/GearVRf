@@ -63,15 +63,7 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
     }    
 
     static public long getComponentType() { return TYPE_BEHAVIOR; }
-    
-    static protected long newComponentType(Class<? extends GVRBehavior> clazz)
-    {
-        long hash = (long) clazz.hashCode() << 32;
-        long t = ((long) System.currentTimeMillis() & 0xfffffff);
-        long result = hash | t;
-        return result;
-    }
-    
+
     @Override
     public void onEnable()
     {

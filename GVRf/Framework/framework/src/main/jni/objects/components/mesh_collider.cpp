@@ -70,6 +70,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     glm::vec3 O(rayStart);
     glm::vec3 D(rayDir);
 
+
     /*
      * If the scene object this collider is attached to also
      * has a transform, compute the model view matrix by
@@ -98,12 +99,26 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     {
         if (useMeshBounds_)
         {
-            const BoundingVolume& bounds = mesh->getBoundingVolume();
+            const BoundingVolume& bounds = owner_object()->getBoundingVolume();
             data = MeshCollider::isHit(bounds, O, D);
         }
         else
         {
             data = MeshCollider::isHit(*mesh, O, D);
+        }
+        if (data.IsHit)
+        {
+            glm::vec4 hitPos = model_matrix * glm::vec4(data.HitPosition, 1);
+
+            data.Distance = glm::distance(rayStart, glm::vec3(hitPos));
+            data.ColliderHit = this;
+            data.ObjectHit = owner;
+        }
+    }else{
+        if (useMeshBounds_)
+        {
+            const BoundingVolume& bounds = owner_object()->getBoundingVolume();
+            data = MeshCollider::isHit(bounds, O, D);
         }
         if (data.IsHit)
         {

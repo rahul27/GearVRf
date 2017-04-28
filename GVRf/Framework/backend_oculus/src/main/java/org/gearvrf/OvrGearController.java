@@ -82,7 +82,7 @@ public class OvrGearController extends GVRCursorController {
     private boolean isEnabled = false;
 
     OvrGearController(GVRContext context) {
-        super(GVRControllerType.CONTROLLER);
+        super(context, GVRControllerType.CONTROLLER);
         ByteBuffer readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
         readbackBufferB.order(ByteOrder.nativeOrder());
         readbackBuffer = readbackBufferB.asFloatBuffer();

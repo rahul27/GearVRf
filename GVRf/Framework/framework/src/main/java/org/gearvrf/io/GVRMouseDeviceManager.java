@@ -97,8 +97,11 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
         boolean isEnabled = false;
 
         GVRMouseController(GVRContext context, GVRControllerType controllerType, String name, int
-                vendorId, int productId, GVRMouseDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
+
+
+                vendorId, int productId,  GVRMouseDeviceManager deviceManager) {
+            super(context, controllerType, name, vendorId, productId);
+
             this.context = context;
             this.deviceManager = deviceManager;
             position = new Vector3f(0.0f, 0.0f, -1.0f);

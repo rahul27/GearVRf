@@ -16,17 +16,23 @@
 package org.gearvrf.io.cursor3d;
 
 
+
 import org.gearvrf.GVRBaseSensor;
+
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPerspectiveCamera;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+//import org.gearvrf.ISensorEvents;
+//import org.gearvrf.SensorEvent;
+import org.gearvrf.IPickEvents;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
-import org.gearvrf.SensorEvent.EventGroup;
 import org.gearvrf.io.cursor3d.CursorInputManager.IoDeviceListener;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
@@ -162,6 +168,8 @@ public class CursorManager {
         selectableBehaviors = new ArrayList<SelectableBehavior>();
         cursorSensor = new CursorSensor(context);
         cursorScale = DEFAULT_CURSOR_SCALE;
+        //scene.getEventReceiver().addListener(pickEvents);
+
 
         try {
             SettingsParser.parseSettings(context, this);
@@ -209,6 +217,38 @@ public class CursorManager {
             }
         }
     }
+
+
+    private IPickEvents pickEvents = new IPickEvents() {
+        @Override
+        public void onPick(GVRPicker gvrPicker) {
+            Log.d(TAG, "onPick");
+        }
+
+        @Override
+        public void onNoPick(GVRPicker gvrPicker) {
+            Log.d(TAG, "onNoPick");
+        }
+
+        @Override
+        public void onPickEnter(GVRSceneObject gvrSceneObject, GVRPicker picker, GVRPicker
+                .GVRPickedObject
+                gvrPickedObject) {
+            Log.d(TAG, "onEnter");
+        }
+
+        @Override
+        public void onPickExit(GVRSceneObject gvrSceneObject,  GVRPicker picker) {
+            Log.d(TAG, "onExit");
+        }
+
+        @Override
+        public void onInside(GVRSceneObject gvrSceneObject, GVRPicker.GVRPickedObject gvrPickedObject) {
+            Log.d(TAG, "onInside");
+        }
+    };
+
+    // TODO switch to default scope after settings ui is implemented
 
     /**
      * Gives a list of all the {@link CursorTheme}s listed in the settings.xml file. Use this
@@ -470,6 +510,8 @@ public class CursorManager {
         }
         // process the new scene, use true to add
         updateCursorsInScene(scene, true);
+
+        //scene.getEventReceiver().addListener(pickEvents);
     }
 
     /**
@@ -657,6 +699,9 @@ public class CursorManager {
             //false to remove
             updateCursorsInScene(this.scene, false);
             for (GVRSceneObject object : this.scene.getSceneObjects()) {
+                // use bounding box
+                object.attachComponent(new GVRMeshCollider(context, true));
+
                 if (object.getSensor() == cursorSensor) {
                     object.setSensor(null);
                     object.getEventReceiver().removeListener(cursorSensor);
@@ -766,6 +811,7 @@ public class CursorManager {
             settingsCursor.setScale(scale);
             cursorScale = scale;
         }
+        object.attachComponent(new GVRMeshCollider(context, true));
         object.setSensor(cursorSensor);
         object.getEventReceiver().addListener(cursorSensor);
         return true;
@@ -786,13 +832,20 @@ public class CursorManager {
             throw new IllegalArgumentException("GVRSceneObject cannot be null");
         }
         removeSelectableBehavior(object);
-        if(object.getSensor() != null) {
+        object.detachComponent(GVRMeshCollider.getComponentType());
+       if(object.getSensor() != null) {
             object.setSensor(null);
             object.getEventReceiver().removeListener(cursorSensor);
             return true;
         } else {
             return false;
         }
+
+        //object.detachComponent(GVRMeshCollider.getComponentType());
+        //object.setSensor(null);
+        //object.getEventReceiver().removeListener(cursorSensor);
+        //return true;
+
     }
 
     private void addSelectableBehavior(GVRSceneObject object) {
@@ -992,8 +1045,10 @@ public class CursorManager {
         }
     };
 
+
     public boolean isDepthOrderEnabled() {
-        return cursorSensor.isDepthOrderEnabled();
+       // return cursorSensor.isDepthOrderEnabled();
+        return false;
     }
 
     /**
@@ -1025,10 +1080,12 @@ public class CursorManager {
      * @param depthOrderEnabled
      */
     public void setDepthOrderEnabled(boolean depthOrderEnabled) {
-        cursorSensor.setDepthOrderEnabled(depthOrderEnabled);
+        //cursorSensor.setDepthOrderEnabled(depthOrderEnabled);
     }
 
+
     private class CursorSensor extends GVRBaseSensor implements ISensorEvents {
+
 
         public CursorSensor(GVRContext context) {
             super(context);
@@ -1036,6 +1093,7 @@ public class CursorManager {
 
         @Override
         public void onSensorEvent(SensorEvent event) {
+            Log.d(TAG, "onSensorEvent");
             int id = event.getCursorController().getId();
             Cursor cursor;
             for (int i = 0; i < cursors.size(); i++) {
